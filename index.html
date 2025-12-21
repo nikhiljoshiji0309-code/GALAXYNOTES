@@ -3,107 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaxy OS - Nikhil Joshi Edition</title>
+    <title>Galaxy OS - Stellar Sphere & Octahedron</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #000005;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; background: #000002;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         #canvas { position: fixed; top: 0; left: 0; z-index: 1; }
-
         .ui-layer {
             position: relative; z-index: 10;
             display: flex; height: 100vh; width: 100vw;
             pointer-events: none;
-            justify-content: flex-end; /* Moves content to the right */
         }
-
-        /* Sidebar - Left Side */
         .sidebar {
-            position: absolute; left: 0; top: 0;
-            width: 240px; height: 100%;
-            background: rgba(0, 0, 0, 0.4); /* Transparent Sidebar */
+            width: 260px; background: rgba(0, 0, 0, 0.9);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             padding: 30px; pointer-events: auto;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             display: flex; flex-direction: column;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
-
-        /* Editor - Moved to Right Side with 90% Transparency */
         #editor {
-            width: 45%; /* Adjusted width */
-            margin: 40px;
-            background: rgba(255, 255, 255, 0.05); /* 95% Transparent */
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px; 
-            padding: 40px;
-            color: #ffffff; 
-            font-size: 1.1rem; 
-            outline: none;
-            pointer-events: auto; 
-            overflow-y: auto;
+            flex-grow: 1; margin: 50px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 40px;
+            color: #ffffff; font-size: 1.1rem; outline: none;
+            pointer-events: auto; overflow-y: auto;
             line-height: 1.7;
-            backdrop-filter: blur(5px); /* Let stars be visible but text readable */
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            transition: border 0.3s ease;
         }
-        #editor:focus {
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
         button {
             width: 100%; padding: 12px; margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.9); color: #000; border: none;
-            border-radius: 8px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; font-size: 0.75rem;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
-        }
-        button:hover { 
-            background: #fff;
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
-        }
-
-        .instruction-box {
-            margin-top: auto; color: #888; font-size: 0.7rem;
-            border: 1px solid rgba(255,255,255,0.1); 
-            padding: 15px; border-radius: 10px;
-            line-height: 1.8;
-            background: rgba(255,255,255,0.02);
-        }
-        .instruction-box b { color: #00d2ff; }
-
-        .note-item {
-            padding: 14px; color: #aaa; cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            font-size: 0.85rem;
+            background: #fff; color: #000; border: none;
+            border-radius: 6px; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; font-size: 0.7rem;
             transition: 0.3s;
-            border-radius: 5px;
         }
-        .note-item:hover { 
-            color: #fff; 
-            background: rgba(255,255,255,0.08); 
-            padding-left: 20px;
+        button:hover { opacity: 0.8; transform: translateY(-2px); }
+        .instruction-box {
+            margin-top: auto; color: #777; font-size: 0.7rem;
+            border: 1px solid #222; padding: 15px; border-radius: 5px;
+            line-height: 1.6;
         }
+        .instruction-box b { color: #aaa; }
+        .note-item {
+            padding: 12px; color: #888; cursor: pointer;
+            border-bottom: 1px solid #111; font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .note-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
+        /* COPYRIGHT STYLE */
         .copyright {
             position: fixed;
-            bottom: 15px;
-            left: 270px; /* Offset from sidebar */
+            bottom: 12px;
+            right: 20px;
             font-size: 0.65rem;
             color: rgba(255, 255, 255, 0.3);
             z-index: 100;
             pointer-events: none;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
-
-        /* Custom Scrollbar */
-        #editor::-webkit-scrollbar { width: 5px; }
-        #editor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -112,15 +73,15 @@
 
 <div class="ui-layer">
     <div class="sidebar">
-        <div style="color: #fff; font-size: 0.9rem; font-weight: bold; letter-spacing: 6px; margin-bottom: 40px; text-shadow: 0 0 10px #00d2ff;">GALAXY OS</div>
+        <div style="color: #fff; font-size: 0.8rem; letter-spacing: 5px; margin-bottom: 40px; opacity: 0.5;">GALAXY OS</div>
         <button onclick="createNewNote()">+ NEW TOPIC</button>
-        <button onclick="saveNotes()" style="background: transparent; color: #fff; border: 1px solid #555;">SAVE SYSTEM</button>
+        <button onclick="saveNotes()" style="background: transparent; color: #fff; border: 1px solid #444;">SAVE SYSTEM</button>
         <div id="noteList"></div>
         
         <div class="instruction-box">
-            <b>CTRL:</b> SPHERE MODE<br>
-            <b>SHIFT:</b> OCTAHEDRON<br>
-            <b>CTRL + SHIFT:</b> METEORS
+            <b>CTRL:</b> SPHERE MODE (10s)<br>
+            <b>SHIFT:</b> OCTAHEDRON (10s)<br>
+            <b>CTRL + SHIFT:</b> METEOR SHOWER (3s)
         </div>
     </div>
     <div id="editor" contenteditable="true" spellcheck="false"></div>
@@ -158,8 +119,8 @@
     function triggerMeteors() {
         if (isMeteorMode) return;
         isMeteorMode = true;
-        for (let i = 0; i < 30; i++) {
-            setTimeout(() => { meteors.push(new Meteor()); }, i * 100);
+        for (let i = 0; i < 25; i++) {
+            setTimeout(() => { meteors.push(new Meteor()); }, i * 120);
         }
         setTimeout(() => { isMeteorMode = false; }, 3000);
     }
@@ -172,26 +133,24 @@
 
     function getStarConfig() {
         const r = Math.random() * 100;
-        if (r < 85) return { c: '#ffffff' };
-        if (r < 92) return { c: '#00d2ff' };
-        if (r < 96) return { c: '#ff4d4d' };
-        return { c: '#ffeb3b' };
+        if (r < 90) return { c: '#ffffff' };
+        if (r < 93) return { c: '#ff4d4d' };
+        if (r < 95) return { c: '#ffeb3b' };
+        if (r < 98) return { c: '#ff9800' };
+        return { c: '#00d2ff' };
     }
 
     class Meteor {
         constructor() {
-            this.x = Math.random() * (canvas.width + 500);
+            this.x = Math.random() * (canvas.width + 400);
             this.y = -100;
-            this.speed = Math.random() * 20 + 15;
-            this.len = Math.random() * 200 + 100;
+            this.speed = Math.random() * 15 + 12;
+            this.len = Math.random() * 150 + 80;
             this.width = Math.random() * 2 + 1;
         }
         draw() {
             ctx.save();
-            let grad = ctx.createLinearGradient(this.x, this.y, this.x - this.len, this.y + this.len);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            grad.addColorStop(1, 'rgba(0, 210, 255, 0)');
-            ctx.strokeStyle = grad;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.lineWidth = this.width;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
@@ -208,7 +167,7 @@
             this.y = Math.random() * canvas.height;
             this.baseX = this.x;
             this.baseY = this.y;
-            this.size = Math.random() * 1.8 + 0.2;
+            this.size = Math.random() * 1.5 + 0.5;
             this.config = getStarConfig();
             this.phi = Math.acos(-1 + (Math.random() * 2));
             this.theta = Math.random() * Math.PI * 2;
@@ -227,21 +186,18 @@
         }
 
         draw() {
-            ctx.fillStyle = this.config.c;
+            let g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+            g.addColorStop(0, this.config.c);
+            g.addColorStop(1, 'transparent');
+            ctx.fillStyle = g;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
             ctx.fill();
-            if (this.size > 1.2) {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.config.c;
-            } else {
-                ctx.shadowBlur = 0;
-            }
         }
 
         update() {
             let targetX, targetY;
-            let radius = Math.min(canvas.width, canvas.height) * 0.25;
+            let radius = 220;
             let centerX = canvas.width / 2;
             let centerY = canvas.height / 2;
 
@@ -249,7 +205,7 @@
                 let x3d = radius * Math.sin(this.phi) * Math.cos(this.theta + globalRotation);
                 let z3d = radius * Math.sin(this.phi) * Math.sin(this.theta + globalRotation);
                 let y3d = radius * Math.cos(this.phi);
-                let scale = 600 / (600 + z3d);
+                let scale = 450 / (450 + z3d);
                 targetX = centerX + x3d * scale;
                 targetY = centerY + y3d * scale;
             } 
@@ -258,7 +214,7 @@
                 let sin = Math.sin(globalRotation);
                 let rx = this.octaX * cos - this.octaZ * sin;
                 let rz = this.octaX * sin + this.octaZ * cos;
-                let scale = 600 / (600 + (rz * radius));
+                let scale = 450 / (450 + (rz * radius));
                 targetX = centerX + (rx * radius) * scale;
                 targetY = centerY + (this.octaY * radius) * scale;
             }
@@ -269,17 +225,17 @@
                 let dist = Math.sqrt(dxM*dxM + dyM*dyM);
                 if (dist < mouse.radius) {
                     let f = (mouse.radius - dist) / mouse.radius;
-                    this.vx -= (dxM / dist) * f * 12;
-                    this.vy -= (dyM / dist) * f * 12;
+                    this.vx -= (dxM / dist) * f * 10;
+                    this.vy -= (dyM / dist) * f * 10;
                 }
             }
 
             let dx = targetX - this.x;
             let dy = targetY - this.y;
-            this.vx += dx * 0.1;
-            this.vy += dy * 0.1;
-            this.vx *= 0.85; 
-            this.vy *= 0.85;
+            this.vx += dx * 0.12;
+            this.vy += dy * 0.12;
+            this.vx *= 0.82; 
+            this.vy *= 0.82;
             this.x += this.vx;
             this.y += this.vy;
         }
@@ -287,24 +243,23 @@
 
     function init() {
         stars = [];
-        for (let i = 0; i < 2200; i++) stars.push(new Star(i));
+        for (let i = 0; i < 2800; i++) stars.push(new Star(i));
     }
 
     function animate() {
-        ctx.fillStyle = '#000008';
+        ctx.fillStyle = '#000005';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        if (isSphereMode || isOctahedronMode) globalRotation += 0.015;
+        if (isSphereMode || isOctahedronMode) globalRotation += 0.025;
         stars.forEach(s => { s.update(); s.draw(); });
         for (let i = meteors.length - 1; i >= 0; i--) {
             meteors[i].update();
             meteors[i].draw();
-            if (meteors[i].y > canvas.height + 200) meteors.splice(i, 1);
+            if (meteors[i].y > canvas.height + 150) meteors.splice(i, 1);
         }
         requestAnimationFrame(animate);
     }
 
-    // Logic for Notepad
-    let notes = JSON.parse(localStorage.getItem('sphere_notes')) || [{id: 1, title: 'SYSTEM LOG', content: 'Galaxy OS Active. User: Nikhil Joshi. Start typing...'}];
+    let notes = JSON.parse(localStorage.getItem('sphere_notes')) || [{id: 1, title: 'SYSTEM LOG', content: 'Welcome to Galaxy OS. Type your thoughts here...'}];
     let currentId = notes[0].id;
 
     function render() {
@@ -342,4 +297,3 @@
 </script>
 </body>
 </html>
-
