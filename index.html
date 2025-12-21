@@ -1,312 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaxy OS - Stellar Sphere & Octahedron</title>
-    <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #000002;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        #canvas { position: fixed; top: 0; left: 0; z-index: 1; }
-        .ui-layer {
-            position: relative; z-index: 10;
-            display: flex; height: 100vh; width: 100vw;
-            pointer-events: none;
-        }
-        .sidebar {
-            width: 260px; background: rgba(0, 0, 0, 0.9);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px; pointer-events: auto;
-            backdrop-filter: blur(20px);
-            display: flex; flex-direction: column;
-        }
-        #editor {
-            flex-grow: 1; margin: 50px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; padding: 40px;
-            color: #ffffff; font-size: 1.1rem; outline: none;
-            pointer-events: auto; overflow-y: auto;
-            line-height: 1.7;
-        }
-        button {
-            width: 100%; padding: 12px; margin-bottom: 15px;
-            background: #fff; color: #000; border: none;
-            border-radius: 6px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; font-size: 0.7rem;
-            transition: 0.3s;
-        }
-        button:hover { opacity: 0.8; transform: translateY(-2px); }
-        .instruction-box {
-            margin-top: auto; color: #777; font-size: 0.7rem;
-            border: 1px solid #222; padding: 15px; border-radius: 5px;
-            line-height: 1.6;
-        }
-        .instruction-box b { color: #aaa; }
-        .note-item {
-            padding: 12px; color: #888; cursor: pointer;
-            border-bottom: 1px solid #111; font-size: 0.8rem;
-            transition: 0.2s;
-        }
-        .note-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy OS - Nikhil Joshi Edition</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000005;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        #canvas { position: fixed; top: 0; left: 0; z-index: 1; }
+
+        .ui-layer {
+            position: relative; z-index: 10;
+            display: flex; height: 100vh; width: 100vw;
+            pointer-events: none;
+            justify-content: flex-end; /* Moves content to the right */
+        }
+
+        /* Sidebar - Left Side */
+        .sidebar {
+            position: absolute; left: 0; top: 0;
+            width: 240px; height: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Transparent Sidebar */
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px; pointer-events: auto;
+            backdrop-filter: blur(10px);
+            display: flex; flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* Editor - Moved to Right Side with 90% Transparency */
+        #editor {
+            width: 45%; /* Adjusted width */
+            margin: 40px;
+            background: rgba(255, 255, 255, 0.05); /* 95% Transparent */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px; 
+            padding: 40px;
+            color: #ffffff; 
+            font-size: 1.1rem; 
+            outline: none;
+            pointer-events: auto; 
+            overflow-y: auto;
+            line-height: 1.7;
+            backdrop-filter: blur(5px); /* Let stars be visible but text readable */
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            transition: border 0.3s ease;
+        }
+        #editor:focus {
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        button {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.9); color: #000; border: none;
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; font-size: 0.75rem;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        button:hover { 
+            background: #fff;
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+
+        .instruction-box {
+            margin-top: auto; color: #888; font-size: 0.7rem;
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; border-radius: 10px;
+            line-height: 1.8;
+            background: rgba(255,255,255,0.02);
+        }
+        .instruction-box b { color: #00d2ff; }
+
+        .note-item {
+            padding: 14px; color: #aaa; cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            font-size: 0.85rem;
+            transition: 0.3s;
+            border-radius: 5px;
+        }
+        .note-item:hover { 
+            color: #fff; 
+            background: rgba(255,255,255,0.08); 
+            padding-left: 20px;
+        }
+
+        .copyright {
+            position: fixed;
+            bottom: 15px;
+            left: 270px; /* Offset from sidebar */
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.3);
+            z-index: 100;
+            pointer-events: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Custom Scrollbar */
+        #editor::-webkit-scrollbar { width: 5px; }
+        #editor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
 </head>
 <body>
 
 <canvas id="canvas"></canvas>
 
 <div class="ui-layer">
-    <div class="sidebar">
-        <div style="color: #fff; font-size: 0.8rem; letter-spacing: 5px; margin-bottom: 40px; opacity: 0.5;">GALAXY OS</div>
-        <button onclick="createNewNote()">+ NEW TOPIC</button>
-        <button onclick="saveNotes()" style="background: transparent; color: #fff; border: 1px solid #444;">SAVE SYSTEM</button>
-        <div id="noteList"></div>
-        
-        <div class="instruction-box">
-            <b>CTRL:</b> SPHERE MODE (10s)<br>
-            <b>SHIFT:</b> OCTAHEDRON (10s)<br>
-            <b>CTRL + SHIFT:</b> METEOR SHOWER (3s)
-        </div>
-    </div>
-    <div id="editor" contenteditable="true" spellcheck="false"></div>
+    <div class="sidebar">
+        <div style="color: #fff; font-size: 0.9rem; font-weight: bold; letter-spacing: 6px; margin-bottom: 40px; text-shadow: 0 0 10px #00d2ff;">GALAXY OS</div>
+        <button onclick="createNewNote()">+ NEW TOPIC</button>
+        <button onclick="saveNotes()" style="background: transparent; color: #fff; border: 1px solid #555;">SAVE SYSTEM</button>
+        <div id="noteList"></div>
+        
+        <div class="instruction-box">
+            <b>CTRL:</b> SPHERE MODE<br>
+            <b>SHIFT:</b> OCTAHEDRON<br>
+            <b>CTRL + SHIFT:</b> METEORS
+        </div>
+    </div>
+    <div id="editor" contenteditable="true" spellcheck="false"></div>
 </div>
 
+<div class="copyright">© 2025 NIKHIL JOSHI. ALL RIGHTS RESERVED.</div>
+
 <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    let meteors = [];
-    const mouse = { x: -1000, y: -1000, radius: 150 };
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let meteors = [];
+    const mouse = { x: -1000, y: -1000, radius: 150 };
 
-    let isSphereMode = false;
-    let isOctahedronMode = false;
-    let isMeteorMode = false;
-    let globalRotation = 0;
+    let isSphereMode = false;
+    let isOctahedronMode = false;
+    let isMeteorMode = false;
+    let globalRotation = 0;
 
-    window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
-    window.addEventListener('resize', resize);
-    
-    // Key Detection
-    window.addEventListener('keydown', (e) => {
-        // Meteor Shower: Ctrl + Shift
-        if (e.ctrlKey && e.shiftKey) {
-            triggerMeteors();
-            return;
-        }
-        // Octahedron: Shift Only
-        if (e.key === "Shift" && !isOctahedronMode) {
-            isOctahedronMode = true;
-            setTimeout(() => { isOctahedronMode = false; }, 10000);
-        }
-        // Sphere: Ctrl Only
-        if (e.key === "Control" && !isSphereMode) {
-            isSphereMode = true;
-            setTimeout(() => { isSphereMode = false; }, 10000);
-        }
-    });
+    window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+    window.addEventListener('resize', resize);
+    
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey) { triggerMeteors(); return; }
+        if (e.key === "Shift" && !isOctahedronMode) {
+            isOctahedronMode = true;
+            setTimeout(() => { isOctahedronMode = false; }, 10000);
+        }
+        if (e.key === "Control" && !isSphereMode) {
+            isSphereMode = true;
+            setTimeout(() => { isSphereMode = false; }, 10000);
+        }
+    });
 
-    function triggerMeteors() {
-        if (isMeteorMode) return;
-        isMeteorMode = true;
-        // Spawn meteors in intervals
-        for (let i = 0; i < 25; i++) {
-            setTimeout(() => {
-                meteors.push(new Meteor());
-            }, i * 120);
-        }
-        setTimeout(() => { isMeteorMode = false; }, 3000);
-    }
+    function triggerMeteors() {
+        if (isMeteorMode) return;
+        isMeteorMode = true;
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => { meteors.push(new Meteor()); }, i * 100);
+        }
+        setTimeout(() => { isMeteorMode = false; }, 3000);
+    }
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        init();
-    }
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        init();
+    }
 
-    function getStarConfig() {
-        const r = Math.random() * 100;
-        if (r < 90) return { c: '#ffffff' };
-        if (r < 93) return { c: '#ff4d4d' };
-        if (r < 95) return { c: '#ffeb3b' };
-        if (r < 98) return { c: '#ff9800' };
-        return { c: '#00d2ff' };
-    }
+    function getStarConfig() {
+        const r = Math.random() * 100;
+        if (r < 85) return { c: '#ffffff' };
+        if (r < 92) return { c: '#00d2ff' };
+        if (r < 96) return { c: '#ff4d4d' };
+        return { c: '#ffeb3b' };
+    }
 
-    class Meteor {
-        constructor() {
-            this.x = Math.random() * (canvas.width + 400);
-            this.y = -100;
-            this.speed = Math.random() * 15 + 12;
-            this.len = Math.random() * 150 + 80;
-            this.width = Math.random() * 2 + 1;
-        }
-        draw() {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = this.width;
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x - this.len, this.y + this.len);
-            ctx.stroke();
-            ctx.restore();
-        }
-        update() {
-            this.x -= this.speed;
-            this.y += this.speed;
-        }
-    }
+    class Meteor {
+        constructor() {
+            this.x = Math.random() * (canvas.width + 500);
+            this.y = -100;
+            this.speed = Math.random() * 20 + 15;
+            this.len = Math.random() * 200 + 100;
+            this.width = Math.random() * 2 + 1;
+        }
+        draw() {
+            ctx.save();
+            let grad = ctx.createLinearGradient(this.x, this.y, this.x - this.len, this.y + this.len);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grad.addColorStop(1, 'rgba(0, 210, 255, 0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = this.width;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x - this.len, this.y + this.len);
+            ctx.stroke();
+            ctx.restore();
+        }
+        update() { this.x -= this.speed; this.y += this.speed; }
+    }
 
-    class Star {
-        constructor(index) {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.baseX = this.x;
-            this.baseY = this.y;
-            this.size = Math.random() * 1.5 + 0.5;
-            this.config = getStarConfig();
-            
-            // Sphere Geometry
-            this.phi = Math.acos(-1 + (Math.random() * 2));
-            this.theta = Math.random() * Math.PI * 2;
-            
-            // Octahedron Geometry (6 vertices, 12 edges)
-            this.setupOctahedron(index);
+    class Star {
+        constructor(index) {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.baseX = this.x;
+            this.baseY = this.y;
+            this.size = Math.random() * 1.8 + 0.2;
+            this.config = getStarConfig();
+            this.phi = Math.acos(-1 + (Math.random() * 2));
+            this.theta = Math.random() * Math.PI * 2;
+            this.setupOctahedron(index);
+            this.vx = 0; this.vy = 0;
+        }
 
-            this.vx = 0;
-            this.vy = 0;
-        }
+        setupOctahedron(i) {
+            const verts = [[0,1,0],[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
+            const edges = [[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[4,3],[3,5],[5,2]];
+            let edge = edges[i % edges.length];
+            let ratio = Math.random();
+            this.octaX = verts[edge[0]][0] + (verts[edge[1]][0] - verts[edge[0]][0]) * ratio;
+            this.octaY = verts[edge[0]][1] + (verts[edge[1]][1] - verts[edge[0]][1]) * ratio;
+            this.octaZ = verts[edge[0]][2] + (verts[edge[1]][2] - verts[edge[0]][2]) * ratio;
+        }
 
-        setupOctahedron(i) {
-            const verts = [[0,1,0],[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
-            const edges = [[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[4,3],[3,5],[5,2]];
-            let edge = edges[i % edges.length];
-            let ratio = Math.random();
-            this.octaX = verts[edge[0]][0] + (verts[edge[1]][0] - verts[edge[0]][0]) * ratio;
-            this.octaY = verts[edge[0]][1] + (verts[edge[1]][1] - verts[edge[0]][1]) * ratio;
-            this.octaZ = verts[edge[0]][2] + (verts[edge[1]][2] - verts[edge[0]][2]) * ratio;
-        }
+        draw() {
+            ctx.fillStyle = this.config.c;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (this.size > 1.2) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.config.c;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+        }
 
-        draw() {
-            let g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-            g.addColorStop(0, this.config.c);
-            g.addColorStop(1, 'transparent');
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        update() {
+            let targetX, targetY;
+            let radius = Math.min(canvas.width, canvas.height) * 0.25;
+            let centerX = canvas.width / 2;
+            let centerY = canvas.height / 2;
 
-        update() {
-            let targetX, targetY;
-            let radius = 220;
-            let centerX = canvas.width / 2;
-            let centerY = canvas.height / 2;
+            if (isSphereMode) {
+                let x3d = radius * Math.sin(this.phi) * Math.cos(this.theta + globalRotation);
+                let z3d = radius * Math.sin(this.phi) * Math.sin(this.theta + globalRotation);
+                let y3d = radius * Math.cos(this.phi);
+                let scale = 600 / (600 + z3d);
+                targetX = centerX + x3d * scale;
+                targetY = centerY + y3d * scale;
+            } 
+            else if (isOctahedronMode) {
+                let cos = Math.cos(globalRotation);
+                let sin = Math.sin(globalRotation);
+                let rx = this.octaX * cos - this.octaZ * sin;
+                let rz = this.octaX * sin + this.octaZ * cos;
+                let scale = 600 / (600 + (rz * radius));
+                targetX = centerX + (rx * radius) * scale;
+                targetY = centerY + (this.octaY * radius) * scale;
+            }
+            else {
+                targetX = this.baseX; targetY = this.baseY;
+                let dxM = mouse.x - this.x;
+                let dyM = mouse.y - this.y;
+                let dist = Math.sqrt(dxM*dxM + dyM*dyM);
+                if (dist < mouse.radius) {
+                    let f = (mouse.radius - dist) / mouse.radius;
+                    this.vx -= (dxM / dist) * f * 12;
+                    this.vy -= (dyM / dist) * f * 12;
+                }
+            }
 
-            if (isSphereMode) {
-                let x3d = radius * Math.sin(this.phi) * Math.cos(this.theta + globalRotation);
-                let z3d = radius * Math.sin(this.phi) * Math.sin(this.theta + globalRotation);
-                let y3d = radius * Math.cos(this.phi);
-                let scale = 450 / (450 + z3d);
-                targetX = centerX + x3d * scale;
-                targetY = centerY + y3d * scale;
-            } 
-            else if (isOctahedronMode) {
-                let cos = Math.cos(globalRotation);
-                let sin = Math.sin(globalRotation);
-                let rx = this.octaX * cos - this.octaZ * sin;
-                let rz = this.octaX * sin + this.octaZ * cos;
-                let scale = 450 / (450 + (rz * radius));
-                targetX = centerX + (rx * radius) * scale;
-                targetY = centerY + (this.octaY * radius) * scale;
-            }
-            else {
-                targetX = this.baseX;
-                targetY = this.baseY;
-                let dxM = mouse.x - this.x;
-                let dyM = mouse.y - this.y;
-                let dist = Math.sqrt(dxM*dxM + dyM*dyM);
-                if (dist < mouse.radius) {
-                    let f = (mouse.radius - dist) / mouse.radius;
-                    this.vx -= (dxM / dist) * f * 10;
-                    this.vy -= (dyM / dist) * f * 10;
-                }
-            }
+            let dx = targetX - this.x;
+            let dy = targetY - this.y;
+            this.vx += dx * 0.1;
+            this.vy += dy * 0.1;
+            this.vx *= 0.85; 
+            this.vy *= 0.85;
+            this.x += this.vx;
+            this.y += this.vy;
+        }
+    }
 
-            let dx = targetX - this.x;
-            let dy = targetY - this.y;
-            this.vx += dx * 0.12;
-            this.vy += dy * 0.12;
-            this.vx *= 0.82; 
-            this.vy *= 0.82;
-            this.x += this.vx;
-            this.y += this.vy;
-        }
-    }
+    function init() {
+        stars = [];
+        for (let i = 0; i < 2200; i++) stars.push(new Star(i));
+    }
 
-    function init() {
-        stars = [];
-        for (let i = 0; i < 2800; i++) stars.push(new Star(i));
-    }
+    function animate() {
+        ctx.fillStyle = '#000008';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (isSphereMode || isOctahedronMode) globalRotation += 0.015;
+        stars.forEach(s => { s.update(); s.draw(); });
+        for (let i = meteors.length - 1; i >= 0; i--) {
+            meteors[i].update();
+            meteors[i].draw();
+            if (meteors[i].y > canvas.height + 200) meteors.splice(i, 1);
+        }
+        requestAnimationFrame(animate);
+    }
 
-    function animate() {
-        ctx.fillStyle = '#000005';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        if (isSphereMode || isOctahedronMode) globalRotation += 0.025;
+    // Logic for Notepad
+    let notes = JSON.parse(localStorage.getItem('sphere_notes')) || [{id: 1, title: 'SYSTEM LOG', content: 'Galaxy OS Active. User: Nikhil Joshi. Start typing...'}];
+    let currentId = notes[0].id;
 
-        stars.forEach(s => {
-            s.update();
-            s.draw();
-        });
+    function render() {
+        const list = document.getElementById('noteList');
+        list.innerHTML = '';
+        notes.forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerText = n.title;
+            div.onclick = () => {
+                const currentNote = notes.find(x => x.id == currentId);
+                if(currentNote) currentNote.content = document.getElementById('editor').innerHTML;
+                currentId = n.id;
+                document.getElementById('editor').innerHTML = n.content;
+            };
+            list.appendChild(div);
+        });
+    }
 
-        for (let i = meteors.length - 1; i >= 0; i--) {
-            meteors[i].update();
-            meteors[i].draw();
-            if (meteors[i].y > canvas.height + 150) meteors.splice(i, 1);
-        }
+    function createNewNote() {
+        const t = prompt("TOPIC NAME:"); if(!t) return;
+        notes.push({id: Date.now(), title: t.toUpperCase(), content: ''});
+        render();
+    }
 
-        requestAnimationFrame(animate);
-    }
+    function saveNotes() {
+        const currentNote = notes.find(x => x.id == currentId);
+        if(currentNote) currentNote.content = document.getElementById('editor').innerHTML;
+        localStorage.setItem('sphere_notes', JSON.stringify(notes));
+        alert("GALAXY DATA ARCHIVED.");
+    }
 
-    // Logic for Notepad
-    let notes = JSON.parse(localStorage.getItem('sphere_notes')) || [{id: 1, title: 'SYSTEM LOG', content: 'Welcome to Galaxy OS. Type your thoughts here...'}];
-    let currentId = notes[0].id;
-
-    function render() {
-        const list = document.getElementById('noteList');
-        list.innerHTML = '';
-        notes.forEach(n => {
-            const div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerText = n.title;
-            div.onclick = () => {
-                const currentNote = notes.find(x => x.id == currentId);
-                if(currentNote) currentNote.content = document.getElementById('editor').innerHTML;
-                currentId = n.id;
-                document.getElementById('editor').innerHTML = n.content;
-            };
-            list.appendChild(div);
-        });
-    }
-
-    function createNewNote() {
-        const t = prompt("TOPIC NAME:"); if(!t) return;
-        notes.push({id: Date.now(), title: t.toUpperCase(), content: ''});
-        render();
-    }
-
-    function saveNotes() {
-        const currentNote = notes.find(x => x.id == currentId);
-        if(currentNote) currentNote.content = document.getElementById('editor').innerHTML;
-        localStorage.setItem('sphere_notes', JSON.stringify(notes));
-        alert("GALAXY DATA ARCHIVED.");
-    }
-
-    resize(); animate(); render();
-    document.getElementById('editor').innerHTML = notes[0].content;
+    resize(); animate(); render();
+    document.getElementById('editor').innerHTML = notes[0].content;
 </script>
 </body>
-</html> 
+</html>
+
