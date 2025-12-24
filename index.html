@@ -11,19 +11,40 @@
 
     <style>
         :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.95); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; }
-        #canvas { position: fixed; top: 0; left: 0; z-index: 1; }
-        #auth-overlay { position: fixed; z-index: 2000; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
-        .ui-layer { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; display: flex; }
-        .sidebar { width: 300px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; transition: 0.3s; pointer-events: auto; }
-        .tab-btn { background: none; border: none; color: #888; padding: 15px; cursor: pointer; text-align: left; width: 100%; border-bottom: 1px solid #111; font-weight: bold; font-size: 0.75rem; }
-        .tab-btn.active { color: var(--accent); background: rgba(0, 210, 255, 0.05); }
-        .list-container { flex-grow: 1; overflow-y: auto; padding: 10px; }
-        .note-card { background: #111; padding: 12px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; border: 1px solid #222; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; }
+        
+        #canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        
+        /* AUTHENTICATION OVERLAY */
+        #auth-overlay { position: fixed; z-index: 2000; width: 100%; height: 100%; background: radial-gradient(circle at center, #111 0%, #000 100%); display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .login-card { text-align: center; padding: 40px; border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 15px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+        
+        /* MAIN APP INTERFACE */
+        .ui-layer { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; flex-direction: row; }
+        .sidebar { width: 320px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; pointer-events: auto; }
+        
+        .tab-btn { background: none; border: none; color: #888; padding: 15px; cursor: pointer; text-align: center; flex: 1; border-bottom: 2px solid transparent; font-weight: bold; transition: 0.3s; }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(0, 210, 255, 0.05); }
+        
+        .list-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .note-card { background: #111; padding: 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
+        .note-card:hover { border-color: var(--accent); transform: translateX(5px); }
+        
         #main-content { flex-grow: 1; display: flex; flex-direction: column; pointer-events: none; }
-        #editor { flex-grow: 1; margin: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 30px; color: white; outline: none; overflow-y: auto; pointer-events: auto; font-size: 1.1rem; }
-        .profile-header { padding: 20px; text-align: center; border-bottom: 1px solid #222; }
-        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); }
+        .top-bar { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; background: rgba(0,0,0,0.5); border-bottom: 1px solid #222; }
+        
+        #editor { 
+            flex-grow: 1; margin: 25px; background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; 
+            padding: 40px; color: white; outline: none; overflow-y: auto; 
+            pointer-events: auto; font-size: 1.2rem; line-height: 1.6;
+        }
+
+        .profile-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #111; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 15px var(--accent); margin-bottom: 10px; }
+        
+        button.primary { background: var(--accent); border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; }
+        button.secondary { background: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; color: black; display: flex; align-items: center; gap: 10px; margin: 0 auto; }
     </style>
 </head>
 <body>
@@ -31,42 +52,56 @@
 <canvas id="canvas"></canvas>
 
 <div id="auth-overlay">
-    <div style="text-align:center;">
-        <h1 style="letter-spacing:10px; color:var(--accent);">COSMIC SOCIAL</h1>
-        <button onclick="login()" style="padding:15px 30px; background:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">SIGN IN WITH GOOGLE</button>
+    <div class="login-card">
+        <h1 style="letter-spacing:8px; color:var(--accent); margin-bottom: 30px;">COSMIC SOCIAL</h1>
+        <button class="secondary" onclick="login()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+            SIGN IN WITH GOOGLE
+        </button>
+        <p style="color: #555; margin-top: 20px; font-size: 0.8rem;">Secure Satellite Connection</p>
     </div>
 </div>
 
 <div class="ui-layer" id="app-ui">
     <div class="sidebar">
         <div class="profile-header">
-            <img id="my-avatar" class="avatar" src="">
-            <h4 id="my-name" style="margin:10px 0 0;"></h4>
+            <img id="my-avatar" class="avatar" src="https://via.placeholder.com/80">
+            <h3 id="my-name" style="margin:0; letter-spacing: 1px;">Commander</h3>
         </div>
-        <div style="display:flex; background:#050505;">
-            <button class="tab-btn active" id="btn-notes" onclick="showTab('notes')">MY NOTES</button>
-            <button class="tab-btn" id="btn-discover" onclick="showTab('discover')">DISCOVER</button>
+        
+        <div style="display:flex;">
+            <button class="tab-btn active" id="btn-notes" onclick="showTab('notes')">DATABANKS</button>
+            <button class="tab-btn" id="btn-discover" onclick="showTab('discover')">SIGNALS</button>
         </div>
+
         <div id="notes-tab" class="list-container">
-            <button onclick="newNote()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:5px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ NEW NOTE</button>
+            <button class="primary" onclick="newNote()" style="width:100%; margin-bottom:15px;">+ INITIALIZE NEW ENTRY</button>
             <div id="my-notes-list"></div>
         </div>
-        <div id="discover-tab" class="list-container" style="display:none;"><div id="discover-list"></div></div>
-    </div>
-    <div id="main-content">
-        <div style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; pointer-events:auto; background:rgba(0,0,0,0.3);">
-            <select id="note-visibility" style="background:#000; color:white; border:1px solid #444; padding:5px;">
-                <option value="private">PRIVATE</option>
-                <option value="public">PUBLIC</option>
-            </select>
-            <button onclick="saveNote()" style="background:var(--accent); border:none; padding:8px 20px; border-radius:4px; font-weight:bold; cursor:pointer;">SYNC TO CLOUD</button>
+
+        <div id="discover-tab" class="list-container" style="display:none;">
+            <p style="font-size: 0.7rem; color: #666; text-align: center;">PUBLIC FREQUENCIES</p>
+            <div id="discover-list"></div>
         </div>
-        <div id="editor" contenteditable="true">Select or create a note...</div>
+    </div>
+
+    <div id="main-content">
+        <div class="top-bar">
+            <div>
+                <span style="font-size: 0.7rem; color: #888; margin-right: 10px;">VISIBILITY:</span>
+                <select id="note-visibility" style="background:#000; color:var(--accent); border:1px solid #444; padding:5px; border-radius:4px;">
+                    <option value="private">🔒 PRIVATE (Local)</option>
+                    <option value="public">🌐 PUBLIC (Broadcast)</option>
+                </select>
+            </div>
+            <button class="primary" onclick="saveNote()">SYNC TO NEBULA</button>
+        </div>
+        <div id="editor" contenteditable="true" spellcheck="false">Welcome to the void. Type to begin your transmission...</div>
     </div>
 </div>
 
 <script>
-    // --- UPDATED CONFIGURATION ---
+    // --- FIREBASE CONFIGURATION (Verified from project) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -77,47 +112,126 @@
         measurementId: "G-3RPC15RWG1"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Robust Initialization
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     let user = null;
     let currentNoteId = null;
 
+    // --- AUTHENTICATION LOGIC ---
     function login() {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).then(res => {
             user = res.user;
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('app-ui').style.display = 'flex';
-            document.getElementById('my-name').innerText = user.displayName;
+            document.getElementById('auth-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('app-ui').style.display = 'flex';
+            }, 500);
+
+            document.getElementById('my-name').innerText = user.displayName.toUpperCase();
             document.getElementById('my-avatar').src = user.photoURL;
+            
+            // Sync user session to Firestore
+            db.collection('users').doc(user.uid).set({
+                name: user.displayName,
+                photo: user.photoURL,
+                active: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge: true});
+
             loadMyNotes();
-        }).catch(err => alert("Error: " + err.message));
+            loadDiscover();
+        }).catch(err => {
+            console.error("Critical Auth Error:", err.code);
+            if(err.code === "auth/operation-not-allowed") {
+                alert("ERROR: Google Sign-In is not enabled in Firebase Console.");
+            } else if(err.code === "auth/unauthorized-domain") {
+                alert("ERROR: This domain is not authorized in Firebase settings.");
+            } else {
+                alert("Login Failed: " + err.message);
+            }
+        });
     }
 
-    function newNote() { currentNoteId = "note_" + Date.now(); document.getElementById('editor').innerHTML = ""; }
+    // --- CONTENT MANAGEMENT ---
+    function newNote() {
+        currentNoteId = "entry_" + Date.now();
+        document.getElementById('editor').innerHTML = "";
+        document.getElementById('editor').focus();
+    }
 
     async function saveNote() {
         if(!user) return;
         const content = document.getElementById('editor').innerHTML;
         const visibility = document.getElementById('note-visibility').value;
-        if(!currentNoteId) currentNoteId = "note_" + Date.now();
-        await db.collection('notes').doc(currentNoteId).set({
-            content: content, owner: user.uid, ownerName: user.displayName,
-            visibility: visibility, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert("Synced!");
+        
+        if(!currentNoteId) currentNoteId = "entry_" + Date.now();
+
+        try {
+            await db.collection('notes').doc(currentNoteId).set({
+                content: content,
+                owner: user.uid,
+                ownerName: user.displayName,
+                visibility: visibility,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            const btn = event.target;
+            btn.innerText = "SUCCESSFUL SYNC";
+            setTimeout(() => btn.innerText = "SYNC TO NEBULA", 2000);
+        } catch (e) {
+            console.error(e);
+            alert("UPLOAD FAILED: Check Firestore Security Rules.");
+        }
     }
 
     function loadMyNotes() {
-        db.collection('notes').where('owner', '==', user.uid).onSnapshot(snap => {
-            const list = document.getElementById('my-notes-list'); list.innerHTML = '';
+        db.collection('notes')
+          .where('owner', '==', user.uid)
+          .orderBy('timestamp', 'desc')
+          .onSnapshot(snap => {
+            const list = document.getElementById('my-notes-list');
+            list.innerHTML = '';
             snap.forEach(doc => {
-                const item = document.createElement('div'); item.className = 'note-card';
-                item.innerHTML = doc.data().content.substring(0,30) + "...";
-                item.onclick = () => { currentNoteId = doc.id; document.getElementById('editor').innerHTML = doc.data().content; };
-                list.appendChild(item);
+                const data = doc.data();
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                const preview = data.content.replace(/<[^>]*>/g, '').substring(0, 40);
+                card.innerHTML = `
+                    <div style="font-size: 0.6rem; color: var(--accent); margin-bottom: 5px;">${data.visibility.toUpperCase()}</div>
+                    <div style="font-size: 0.9rem;">${preview || 'Empty Transmission...'}</div>
+                `;
+                card.onclick = () => {
+                    currentNoteId = doc.id;
+                    document.getElementById('editor').innerHTML = data.content;
+                    document.getElementById('note-visibility').value = data.visibility;
+                };
+                list.appendChild(card);
+            });
+        }, err => console.error("Listener Error:", err));
+    }
+
+    function loadDiscover() {
+        db.collection('notes')
+          .where('visibility', '==', 'public')
+          .limit(20)
+          .onSnapshot(snap => {
+            const list = document.getElementById('discover-list');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const data = doc.data();
+                if(data.owner === user.uid) return;
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.innerHTML = `
+                    <div style="font-size: 0.6rem; color: #888; margin-bottom: 5px;">FROM: ${data.ownerName.toUpperCase()}</div>
+                    <div style="font-size: 0.85rem;">${data.content.replace(/<[^>]*>/g, '').substring(0, 50)}...</div>
+                `;
+                list.appendChild(card);
             });
         });
     }
@@ -125,24 +239,50 @@
     function showTab(id) {
         document.getElementById('notes-tab').style.display = id === 'notes' ? 'block' : 'none';
         document.getElementById('discover-tab').style.display = id === 'discover' ? 'block' : 'none';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'btn-' + id));
+        document.getElementById('btn-notes').classList.toggle('active', id === 'notes');
+        document.getElementById('btn-discover').classList.toggle('active', id === 'discover');
     }
 
-    const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
+    // --- AMBIENT SPACE ENGINE ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
     let stars = [];
+
     function initStars() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        stars = []; for(let i=0; i<200; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5 });
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight;
+        stars = [];
+        for(let i=0; i<300; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 1.5,
+                speed: Math.random() * 0.3
+            });
+        }
     }
-    function draw() {
-        ctx.fillStyle = '#000005'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle = '#fff';
-        stars.forEach(s => { s.y -= s.v; if(s.y<0) s.y=canvas.height; ctx.beginPath(); ctx.arc(s.x,s.y,1,0,Math.PI*2); ctx.fill(); });
-        requestAnimationFrame(draw);
+
+    function animate() {
+        ctx.fillStyle = '#000005';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        stars.forEach(s => {
+            s.y -= s.speed;
+            if(s.y < 0) s.y = canvas.height;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        requestAnimationFrame(animate);
     }
-    initStars(); draw();
+
+    window.addEventListener('resize', initStars);
+    initStars();
+    animate();
 </script>
 </body>
 </html>
+
 
 
 
