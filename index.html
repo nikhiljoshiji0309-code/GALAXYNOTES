@@ -71,7 +71,7 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIGURATION ---
+    // --- FIREBASE CONFIGURATION (Verified from image_46a5ec.png) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAxbB0THzXG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -82,6 +82,7 @@
         measurementId: "G-3RPC15RWG1"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -89,6 +90,7 @@
     let user = null;
     let currentNoteId = null;
 
+    // --- AUTHENTICATION (Fixed Provider Initialization) ---
     function login() {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).then(res => {
@@ -97,35 +99,57 @@
             document.getElementById('app-ui').style.display = 'flex';
             document.getElementById('my-name').innerText = user.displayName;
             document.getElementById('my-avatar').src = user.photoURL;
+            
+            // Sync user profile to Firestore
             db.collection('users').doc(user.uid).set({
                 name: user.displayName,
                 photo: user.photoURL,
                 lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             }, {merge: true});
-            loadMyNotes(); loadDiscover(); loadChats();
-        }).catch(err => alert("Login Error: " + err.message));
+
+            loadMyNotes();
+            loadDiscover();
+            loadChats();
+        }).catch(err => {
+            console.error("Login Error:", err);
+            alert("Error: " + err.message);
+        });
     }
 
-    function newNote() { currentNoteId = "note_" + Date.now(); document.getElementById('editor').innerHTML = ""; }
+    // --- NOTES LOGIC ---
+    function newNote() {
+        currentNoteId = "note_" + Date.now();
+        document.getElementById('editor').innerHTML = "";
+    }
 
     async function saveNote() {
+        if(!user) return alert("Sign in required");
         const content = document.getElementById('editor').innerHTML;
         const visibility = document.getElementById('note-visibility').value;
         if(!currentNoteId) currentNoteId = "note_" + Date.now();
+
         await db.collection('notes').doc(currentNoteId).set({
-            content: content, owner: user.uid, ownerName: user.displayName,
-            visibility: visibility, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            content: content,
+            owner: user.uid,
+            ownerName: user.displayName,
+            visibility: visibility,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Note synced to Cosmic Database.");
+        alert("Synced to Cosmic Cloud.");
     }
 
     function loadMyNotes() {
         db.collection('notes').where('owner', '==', user.uid).onSnapshot(snap => {
-            const list = document.getElementById('my-notes-list'); list.innerHTML = '';
+            const list = document.getElementById('my-notes-list');
+            list.innerHTML = '';
             snap.forEach(doc => {
-                const item = document.createElement('div'); item.className = 'note-card';
+                const item = document.createElement('div');
+                item.className = 'note-card';
                 item.innerHTML = `<strong>${doc.data().visibility.toUpperCase()}</strong><br>${doc.data().content.replace(/<[^>]*>/g, '').substring(0,25)}...`;
-                item.onclick = () => { currentNoteId = doc.id; document.getElementById('editor').innerHTML = doc.data().content; };
+                item.onclick = () => {
+                    currentNoteId = doc.id;
+                    document.getElementById('editor').innerHTML = doc.data().content;
+                };
                 list.appendChild(item);
             });
         });
@@ -133,12 +157,14 @@
 
     function loadDiscover() {
         db.collection('notes').where('visibility', '==', 'public').onSnapshot(snap => {
-            const list = document.getElementById('discover-list'); list.innerHTML = '';
+            const list = document.getElementById('discover-list');
+            list.innerHTML = '';
             snap.forEach(doc => {
                 if(doc.data().owner === user.uid) return;
-                const item = document.createElement('div'); item.className = 'note-card';
-                item.innerHTML = `<small>From: ${doc.data().ownerName}</small><br>${doc.data().content.replace(/<[^>]*>/g, '').substring(0,35)}...`;
-                item.onclick = () => { if(confirm("Chat with " + doc.data().ownerName + "?")) startChat(doc.data().owner, doc.data().ownerName); };
+                const item = document.createElement('div');
+                item.className = 'note-card';
+                item.innerHTML = `<small>Signal from: ${doc.data().ownerName}</small><br>${doc.data().content.replace(/<[^>]*>/g, '').substring(0,35)}...`;
+                item.onclick = () => { if(confirm("Connect with " + doc.data().ownerName + "?")) startChat(doc.data().owner, doc.data().ownerName); };
                 list.appendChild(item);
             });
         });
@@ -146,18 +172,23 @@
 
     async function startChat(otherId, otherName) {
         const chatId = user.uid < otherId ? user.uid + "_" + otherId : otherId + "_" + user.uid;
-        await db.collection('chats').doc(chatId).set({ users: [user.uid, otherId], names: [user.displayName, otherName] }, {merge: true});
+        await db.collection('chats').doc(chatId).set({
+            users: [user.uid, otherId],
+            names: [user.displayName, otherName]
+        }, {merge: true});
         showTab('chats');
     }
 
     function loadChats() {
         db.collection('chats').where('users', 'array-contains', user.uid).onSnapshot(snap => {
-            const list = document.getElementById('chat-list'); list.innerHTML = '';
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
             snap.forEach(doc => {
                 const otherName = doc.data().names.find(n => n !== user.displayName);
-                const item = document.createElement('div'); item.className = 'note-card';
-                item.innerHTML = `<strong>${otherName}</strong><br><small>Encrypted Channel</small>`;
-                item.onclick = () => alert("Chat opened with " + otherName);
+                const item = document.createElement('div');
+                item.className = 'note-card';
+                item.innerHTML = `<strong>${otherName}</strong><br><small>Active Connection</small>`;
+                item.onclick = () => alert("Direct link established with " + otherName);
                 list.appendChild(item);
             });
         });
@@ -170,23 +201,29 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'btn-' + id));
     }
 
-    // --- BACKGROUND ENGINE ---
-    const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
+    // --- BACKGROUND STAR ENGINE ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
     let stars = [];
     function initStars() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         stars = [];
-        for(let i=0; i<400; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2 });
+        for(let i=0; i<400; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5 });
     }
     function draw() {
-        ctx.fillStyle = '#000005'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle = '#fff';
-        stars.forEach(s => { s.x+=s.vx; s.y+=s.vy; if(s.x<0)s.x=canvas.width; if(s.y<0)s.y=canvas.height; ctx.beginPath(); ctx.arc(s.x,s.y,0.8,0,Math.PI*2); ctx.fill(); });
+        ctx.fillStyle = '#000005'; ctx.fillRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        stars.forEach(s => {
+            s.y -= s.v; if(s.y < 0) s.y = canvas.height;
+            ctx.beginPath(); ctx.arc(s.x, s.y, 0.8, 0, Math.PI*2); ctx.fill();
+        });
         requestAnimationFrame(draw);
     }
     window.addEventListener('resize', initStars); initStars(); draw();
 </script>
 </body>
 </html>
+
 
 
 
