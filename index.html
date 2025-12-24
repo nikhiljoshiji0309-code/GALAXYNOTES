@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cosmic Social - Universe</title>
+    <title>Cosmic Social - Galactic U</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.98); --text: #e0e0e0; --glass: rgba(255, 255, 255, 0.08); }
+        :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.98); --text: #e0e0e0; --glass: rgba(255, 255, 255, 0.07); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); }
         
         #canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
@@ -20,40 +20,41 @@
         .sidebar { width: 280px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; pointer-events: auto; }
         .main-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(0,0,0,0.4); }
 
-        /* Auth Overlay */
-        #auth-overlay { position: fixed; z-index: 5000; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; }
-
         /* Navigation */
-        .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; font-weight: 500; font-size: 0.9rem; }
-        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
+        .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; font-weight: 500; font-size: 0.9rem; letter-spacing: 1px; }
+        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); border-right: 3px solid var(--accent); }
 
         /* Content Areas */
-        .view-section { display: none; padding: 25px; height: 100%; overflow-y: auto; box-sizing: border-box; }
+        .view-section { display: none; padding: 30px; height: 100%; overflow-y: auto; box-sizing: border-box; }
         .view-section.active { display: block; }
 
-        /* Attractive UI Elements */
-        .glass-card { background: var(--glass); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
-        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        /* UI Elements */
+        .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 15px; transition: 0.3s; }
+        .card:hover { border-color: var(--accent); background: rgba(0, 210, 255, 0.03); }
         
-        input, select, textarea { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; background: #0a0a0f; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-top: 5px; outline: none; }
+        input:focus { border-color: var(--accent); }
         button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary { background: var(--accent); color: #000; box-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
         .btn-ghost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
 
-        /* Cosmic Chat Styling */
-        .chat-container { display: flex; height: 500px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 1px solid #222; overflow: hidden; }
-        .chat-sidebar { width: 220px; border-right: 1px solid #222; overflow-y: auto; background: rgba(255,255,255,0.02); }
-        .chat-main { flex: 1; display: flex; flex-direction: column; }
-        .chat-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #111; font-size: 0.85rem; transition: 0.2s; }
-        .chat-item:hover { background: rgba(255,255,255,0.05); }
-        .chat-item.active { border-left: 3px solid var(--accent); background: rgba(0, 210, 255, 0.05); }
-        
-        .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
-        .avatar-lg { width: 100px; height: 100px; border-radius: 25px; border: 3px solid var(--accent); box-shadow: 0 0 20px var(--accent); }
+        /* Galactic U (Profile) */
+        .profile-header { display: flex; align-items: center; gap: 30px; margin-bottom: 30px; }
+        .u-avatar { width: 120px; height: 120px; border-radius: 30px; border: 3px solid var(--accent); object-fit: cover; box-shadow: 0 0 30px rgba(0, 210, 255, 0.4); }
 
-        .chat-msg { margin: 8px 0; padding: 12px 16px; border-radius: 15px; max-width: 75%; font-size: 0.9rem; line-height: 1.4; }
-        .msg-them { background: #222; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-me { background: var(--accent); color: black; align-self: flex-end; border-bottom-right-radius: 2px; }
+        /* Cosmic Chat */
+        .chat-ui { display: flex; height: 500px; background: rgba(0,0,0,0.6); border-radius: 15px; border: 1px solid #222; overflow: hidden; }
+        .chat-list { width: 220px; border-right: 1px solid #222; overflow-y: auto; background: rgba(255,255,255,0.02); }
+        .chat-main { flex: 1; display: flex; flex-direction: column; }
+        .freq-item { padding: 15px; border-bottom: 1px solid #111; cursor: pointer; font-size: 0.85rem; }
+        .freq-item:hover { background: rgba(255,255,255,0.05); }
+        .freq-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
+        .msg-bubble { margin: 8px 15px; padding: 12px 16px; border-radius: 15px; max-width: 70%; font-size: 0.9rem; }
+        .me { align-self: flex-end; background: var(--accent); color: #000; }
+        .them { align-self: flex-start; background: #222; color: #fff; }
+
+        #auth-overlay { position: fixed; z-index: 5000; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; }
     </style>
 </head>
 <body>
@@ -62,66 +63,43 @@
 
 <div id="auth-overlay">
     <div>
-        <h1 style="letter-spacing:12px; color:var(--accent); font-size: 2.5rem;">COSMIC</h1>
-        <p style="color: #666; margin-bottom: 30px;">INTERSTELLAR SOCIAL NETWORK</p>
-        <button class="btn-primary" onclick="login()" style="padding: 15px 40px; font-size: 1rem;">SIGN IN WITH GOOGLE</button>
+        <h1 style="letter-spacing:15px; color:var(--accent); font-size: 3rem; margin: 0;">COSMIC</h1>
+        <p style="color: #666; margin-bottom: 40px; letter-spacing: 4px;">NEURAL NETWORK</p>
+        <button class="btn-primary" onclick="login()" style="padding: 18px 50px; border-radius: 50px;">INITIALIZE SESSION</button>
     </div>
 </div>
 
 <div class="app-container" id="app-ui">
     <div class="sidebar">
-        <div style="padding: 30px 20px; text-align: center;">
-            <img id="user-pfp" class="avatar" src="" style="width: 70px; height: 70px;">
-            <h3 id="display-name" style="margin: 10px 0 0;">...</h3>
+        <div style="padding: 40px 20px; text-align: center;">
+            <img id="user-pfp" src="" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;">
+            <h3 id="display-name" style="margin: 15px 0 0; font-weight: 300;">...</h3>
         </div>
         <div class="nav-item active" onclick="switchView('discover')">🔭 DISCOVER</div>
         <div class="nav-item" onclick="switchView('new-note')">📝 NEW NOTE</div>
-        <div class="nav-item" onclick="switchView('my-notes')">📁 MY NOTES</div>
         <div class="nav-item" onclick="switchView('chats')">💬 COSMIC CHAT</div>
         <div class="nav-item" onclick="switchView('profile')">👤 GALACTIC U</div>
+        <div class="nav-item" onclick="switchView('my-notes')">📁 ARCHIVES</div>
     </div>
 
     <div class="main-view">
         <section id="view-discover" class="view-section active">
-            <h2>Cosmic Signals</h2>
+            <h2 style="letter-spacing: 2px;">Global Transmissions</h2>
             <div id="discover-feed"></div>
         </section>
 
-        <section id="view-new-note" class="view-section">
-            <h2>Initialize Transmission</h2>
-            <div class="glass-card">
-                <label>Note Content</label>
-                <textarea id="note-body" rows="8" placeholder="Type your thoughts..."></textarea>
-                <label>Visibility</label>
-                <select id="note-privacy">
-                    <option value="public">🌐 PUBLIC (Everyone can see)</option>
-                    <option value="private">🔒 PRIVATE (Only me)</option>
-                </select>
-                <button class="btn-primary" onclick="saveNote()" style="margin-top: 15px; width: 100%;">PUBLISH TO NEBULA</button>
-            </div>
-        </section>
-
-        <section id="view-my-notes" class="view-section">
-            <h2>Your Archives</h2>
-            <div id="personal-feed"></div>
-        </section>
-
         <section id="view-chats" class="view-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                <h2>Active Frequencies</h2>
-                <button class="btn-ghost" onclick="createGroup()" style="font-size: 0.8rem;">+ MAKE A GROUP</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0;">Frequencies</h2>
+                <button class="btn-ghost" onclick="createGroup()">+ NEW GROUP</button>
             </div>
-            
-            <div class="chat-container">
-                <div class="chat-sidebar" id="freq-list">
-                    </div>
+            <div class="chat-ui">
+                <div class="chat-list" id="chat-sidebar-list"></div>
                 <div class="chat-main">
-                    <div id="chat-header" style="padding: 15px; border-bottom: 1px solid #222; font-weight: bold; background: rgba(0,0,0,0.2);">
-                        Select a frequency to begin transmission
-                    </div>
-                    <div id="chat-messages" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 15px;"></div>
-                    <div style="display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.3);">
-                        <input id="msg-input" placeholder="Enter transmission..." style="margin:0;">
+                    <div id="chat-header" style="padding:15px; background: rgba(0,0,0,0.3); border-bottom:1px solid #222; font-weight: bold; color:var(--accent);">Select Signal</div>
+                    <div id="chat-messages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding-top: 15px;"></div>
+                    <div style="padding:15px; background:rgba(0,0,0,0.4); display:flex; gap:10px;">
+                        <input id="msg-input" placeholder="Type transmission..." style="margin:0;">
                         <button class="btn-primary" onclick="sendMessage()">SEND</button>
                     </div>
                 </div>
@@ -129,36 +107,54 @@
         </section>
 
         <section id="view-profile" class="view-section">
-            <h2>Galactic U Identity</h2>
+            <h2 style="margin-bottom:20px;">Identity Hub</h2>
             <div class="glass-card">
-                <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 30px;">
-                    <img id="u-display-img" class="avatar-lg" src="">
+                <div class="profile-header">
+                    <img id="u-display-img" class="u-avatar" src="">
                     <div>
-                        <h1 id="u-display-name" style="margin:0; color:var(--accent);">Commander</h1>
-                        <p id="u-display-gender" style="color:#888; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;"></p>
+                        <h1 id="u-display-name" style="margin:0; font-size: 2rem;">Commander</h1>
+                        <p id="u-display-gender" style="color:var(--accent); letter-spacing: 2px; font-size: 0.8rem; margin: 5px 0;"></p>
                     </div>
                 </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                     <div>
-                        <label>Public Alias</label>
-                        <input id="profile-name" type="text">
+                        <label style="font-size: 0.7rem; color: #888;">COSMIC NAME</label>
+                        <input id="edit-name" type="text">
                     </div>
                     <div>
-                        <label>Identity Gender</label>
-                        <select id="profile-gender">
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
+                        <label style="font-size: 0.7rem; color: #888;">GENDER SIGNATURE</label>
+                        <select id="edit-gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                     <div style="grid-column: span 2;">
-                        <label>Avatar Transponder (Image URL)</label>
-                        <input id="profile-img" type="text">
+                        <label style="font-size: 0.7rem; color: #888;">AVATAR TRANSPONDER URL</label>
+                        <input id="edit-pfp" type="text">
                     </div>
                 </div>
-                <button class="btn-primary" onclick="updateProfile()" style="margin-top: 30px; width: 100%; padding: 15px;">SYNC IDENTITY</button>
+                <button class="btn-primary" onclick="updateProfile()" style="margin-top: 30px; width:100%; padding: 15px;">SYNC IDENTITY</button>
             </div>
+        </section>
+
+        <section id="view-new-note" class="view-section">
+            <h2>Initialize Note</h2>
+            <div class="glass-card">
+                <textarea id="note-body" rows="8" placeholder="Log your thoughts..."></textarea>
+                <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <select id="note-privacy" style="width: 200px; margin:0;">
+                        <option value="public">🌐 PUBLIC</option>
+                        <option value="private">🔒 PRIVATE</option>
+                    </select>
+                    <button class="btn-primary" onclick="saveNote()">PUBLISH</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-my-notes" class="view-section">
+            <h2>Personal Logs</h2>
+            <div id="personal-feed"></div>
         </section>
     </div>
 </div>
@@ -192,137 +188,92 @@
                 await db.collection('users').doc(currentUser.uid).set({
                     name: currentUser.displayName,
                     photo: currentUser.photoURL,
-                    gender: 'other',
-                    status: 'online',
-                    friends: []
+                    gender: 'Other', status: 'online'
                 });
             }
-            loadProfileData();
-            updatePresence(true);
-            loadDiscoverFeed();
-            loadChatList();
+            loadProfile();
+            loadDiscover();
+            loadChatSidebar();
         });
     }
 
-    function updatePresence(isOnline) {
-        if (!currentUser) return;
-        db.collection('users').doc(currentUser.uid).update({ 
-            status: isOnline ? 'online' : 'offline',
-            lastActive: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    }
-
-    function loadProfileData() {
+    // --- PROFILE (GALACTIC U) ---
+    function loadProfile() {
         db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
-            const data = doc.data();
-            document.getElementById('display-name').innerText = data.name;
-            document.getElementById('user-pfp').src = data.photo;
-            
-            // Galactic U updates
-            document.getElementById('u-display-name').innerText = data.name;
-            document.getElementById('u-display-img').src = data.photo;
-            document.getElementById('u-display-gender').innerText = data.gender;
-            
-            document.getElementById('profile-name').value = data.name;
-            document.getElementById('profile-gender').value = data.gender;
-            document.getElementById('profile-img').value = data.photo;
+            const d = doc.data();
+            document.getElementById('display-name').innerText = d.name;
+            document.getElementById('user-pfp').src = d.photo;
+            document.getElementById('u-display-name').innerText = d.name;
+            document.getElementById('u-display-img').src = d.photo;
+            document.getElementById('u-display-gender').innerText = d.gender.toUpperCase();
+            document.getElementById('edit-name').value = d.name;
+            document.getElementById('edit-pfp').value = d.photo;
+            document.getElementById('edit-gender').value = d.gender;
         });
     }
 
     async function updateProfile() {
         await db.collection('users').doc(currentUser.uid).update({
-            name: document.getElementById('profile-name').value,
-            gender: document.getElementById('profile-gender').value,
-            photo: document.getElementById('profile-img').value
+            name: document.getElementById('edit-name').value,
+            photo: document.getElementById('edit-pfp').value,
+            gender: document.getElementById('edit-gender').value
         });
-        alert("Profile Synced.");
+        alert("Identity Synced with Galactic Network.");
     }
 
-    async function saveNote() {
-        const content = document.getElementById('note-body').value;
-        const privacy = document.getElementById('note-privacy').value;
-        await db.collection('notes').add({
-            content,
-            visibility: privacy,
-            owner: currentUser.uid,
-            ownerName: currentUser.displayName,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        document.getElementById('note-body').value = '';
-        alert("Note Transmitted.");
-        switchView('my-notes');
-    }
-
-    function loadDiscoverFeed() {
-        db.collection('notes').where('visibility', '==', 'public').limit(20).onSnapshot(snap => {
-            const container = document.getElementById('discover-feed');
-            container.innerHTML = '';
-            snap.forEach(doc => {
-                const n = doc.data();
-                container.innerHTML += `
-                    <div class="card">
-                        <h4>${n.ownerName}</h4>
-                        <p>${n.content}</p>
-                        <button class="btn-ghost" onclick="startChat('${n.owner}', '${n.ownerName}')">Message Publisher</button>
-                    </div>`;
-            });
-        });
-    }
-
-    // --- ENHANCED CHAT LOGIC ---
-    function loadChatList() {
+    // --- COSMIC CHAT ---
+    function loadChatSidebar() {
         db.collection('chats').where('participants', 'array-contains', currentUser.uid).onSnapshot(snap => {
-            const list = document.getElementById('freq-list');
-            list.innerHTML = '';
+            const sidebar = document.getElementById('chat-sidebar-list');
+            sidebar.innerHTML = '';
             snap.forEach(doc => {
                 const chat = doc.data();
                 const div = document.createElement('div');
-                div.className = 'chat-item' + (activeChatId === doc.id ? ' active' : '');
-                div.innerHTML = `<strong>${chat.type === 'group' ? '🛰️' : '👤'} ${chat.chatName}</strong>`;
-                div.onclick = () => { activeChatId = doc.id; selectChat(doc.id, chat.chatName); };
-                list.appendChild(div);
+                div.className = `freq-item ${activeChatId === doc.id ? 'active' : ''}`;
+                div.innerHTML = `<strong>${chat.type === 'group' ? '🛰️' : '👤'}</strong> ${chat.chatName}`;
+                div.onclick = () => selectChat(doc.id, chat.chatName);
+                sidebar.appendChild(div);
             });
         });
     }
 
     async function createGroup() {
-        const gName = prompt("Enter Frequency Name (Group Name):");
+        const gName = prompt("Frequency Name (Group Name):");
         if(!gName) return;
         await db.collection('chats').add({
-            chatName: gName,
-            type: 'group',
-            participants: [currentUser.uid],
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            chatName: gName, type: 'group', participants: [currentUser.uid]
         });
     }
 
+    // FIXED: The Message Publisher helper
     async function startChat(otherId, otherName) {
         if(otherId === currentUser.uid) return;
         const id = [currentUser.uid, otherId].sort().join('_');
+        
+        // Switch view first for better UX
+        switchView('chats');
+        
         await db.collection('chats').doc(id).set({
             chatName: otherName,
             type: 'private',
             participants: [currentUser.uid, otherId]
         }, {merge: true});
-        switchView('chats');
+        
         selectChat(id, otherName);
     }
 
     function selectChat(id, name) {
         activeChatId = id;
-        document.getElementById('chat-header').innerText = "📍 Channel: " + name;
-        loadMessages();
-    }
-
-    function loadMessages() {
-        if(!activeChatId) return;
-        db.collection('chats').doc(activeChatId).collection('messages').orderBy('time').onSnapshot(snap => {
+        document.getElementById('chat-header').innerText = "Signal: " + name;
+        loadChatSidebar(); // Refresh active state
+        
+        db.collection('chats').doc(id).collection('messages').orderBy('time').onSnapshot(snap => {
             const box = document.getElementById('chat-messages');
             box.innerHTML = '';
-            snap.forEach(doc => {
-                const m = doc.data();
-                const cls = m.sender === currentUser.uid ? 'msg-me' : 'msg-them';
-                box.innerHTML += `<div class="chat-msg ${cls}">${m.text}</div>`;
+            snap.forEach(mDoc => {
+                const m = mDoc.data();
+                const cls = m.sender === currentUser.uid ? 'me' : 'them';
+                box.innerHTML += `<div class="msg-bubble ${cls}"><strong>${m.senderName}:</strong><br>${m.text}</div>`;
             });
             box.scrollTop = box.scrollHeight;
         });
@@ -332,28 +283,58 @@
         const text = document.getElementById('msg-input').value;
         if(!text || !activeChatId) return;
         await db.collection('chats').doc(activeChatId).collection('messages').add({
-            text, sender: currentUser.uid, time: firebase.firestore.FieldValue.serverTimestamp()
+            text, sender: currentUser.uid, senderName: document.getElementById('display-name').innerText,
+            time: firebase.firestore.FieldValue.serverTimestamp()
         });
         document.getElementById('msg-input').value = '';
     }
 
-    function switchView(viewId) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(viewId === 'my-notes') {
-            db.collection('notes').where('owner', '==', currentUser.uid).onSnapshot(snap => {
-                const container = document.getElementById('personal-feed');
-                container.innerHTML = '';
-                snap.forEach(doc => {
-                    const n = doc.data();
-                    container.innerHTML += `<div class="card"><strong>[${n.visibility}]</strong><p>${n.content}</p></div>`;
-                });
-            });
-        }
+    // --- NOTES & DISCOVER ---
+    async function saveNote() {
+        await db.collection('notes').add({
+            content: document.getElementById('note-body').value,
+            visibility: document.getElementById('note-privacy').value,
+            owner: currentUser.uid,
+            ownerName: document.getElementById('display-name').innerText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('note-body').value = '';
+        alert("Transmission Sent.");
     }
 
-    // --- ADAPTIVE BACKGROUND ---
+    function loadDiscover() {
+        db.collection('notes').where('visibility', '==', 'public').onSnapshot(snap => {
+            const feed = document.getElementById('discover-feed');
+            feed.innerHTML = '';
+            snap.forEach(doc => {
+                const n = doc.data();
+                const safeName = n.ownerName.replace(/'/g, "\\'"); // Fix for names with quotes
+                feed.innerHTML += `
+                    <div class="card">
+                        <h4 style="color:var(--accent); margin:0 0 10px;">${n.ownerName}</h4>
+                        <p>${n.content}</p>
+                        <button class="btn-ghost" onclick="startChat('${n.owner}', '${safeName}')">Message Publisher</button>
+                    </div>`;
+            });
+        });
+    }
+
+    function switchView(id) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('view-' + id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(id === 'my-notes') loadArchives();
+    }
+
+    function loadArchives() {
+        db.collection('notes').where('owner', '==', currentUser.uid).onSnapshot(snap => {
+            const feed = document.getElementById('personal-feed');
+            feed.innerHTML = '';
+            snap.forEach(d => feed.innerHTML += `<div class="card"><strong>[${d.data().visibility.toUpperCase()}]</strong><br>${d.data().content}</div>`);
+        });
+    }
+
+    // --- BACKGROUND (STARS) ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
@@ -399,10 +380,10 @@
     }
 
     initStars(); animate();
-    window.onbeforeunload = () => updatePresence(false);
 </script>
 </body>
 </html>
+
 
 
 
