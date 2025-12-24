@@ -3,28 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cosmic Social - Workspace</title>
+    <title>Cosmic Social - Universe</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.95); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; }
+        :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.98); --text: #e0e0e0; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); }
+        
         #canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
-        #auth-overlay { position: fixed; z-index: 2000; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
-        .ui-layer { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; display: flex; }
-        .sidebar { width: 300px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; pointer-events: auto; }
-        .tab-btn { background: none; border: none; color: #888; padding: 15px; cursor: pointer; text-align: left; width: 100%; border-bottom: 1px solid #111; font-weight: bold; font-size: 0.75rem; }
-        .tab-btn.active { color: var(--accent); background: rgba(0, 210, 255, 0.05); }
-        .list-container { flex-grow: 1; overflow-y: auto; padding: 10px; }
-        .note-card { background: #111; padding: 12px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; border: 1px solid #222; }
-        #main-content { flex-grow: 1; display: flex; flex-direction: column; pointer-events: none; }
-        #editor { flex-grow: 1; margin: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 30px; color: white; outline: none; overflow-y: auto; pointer-events: auto; font-size: 1.1rem; }
-        .profile-header { padding: 20px; text-align: center; border-bottom: 1px solid #222; }
-        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); margin-bottom: 10px; }
-        .primary-btn { padding: 15px 30px; background: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: black; }
+        
+        /* Layout */
+        .app-container { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; display: flex; }
+        .sidebar { width: 280px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; pointer-events: auto; }
+        .main-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(0,0,0,0.4); }
+
+        /* Auth Overlay */
+        #auth-overlay { position: fixed; z-index: 5000; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; }
+
+        /* Navigation */
+        .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; font-weight: 500; font-size: 0.9rem; }
+        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
+
+        /* Content Areas */
+        .view-section { display: none; padding: 25px; height: 100%; overflow-y: auto; box-sizing: border-box; }
+        .view-section.active { display: block; }
+
+        /* Cards & UI Elements */
+        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        input, select, textarea { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 6px; margin-top: 5px; }
+        button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-ghost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+        /* Profile & Chat Specifics */
+        .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .chat-msg { margin: 10px 0; padding: 10px; border-radius: 10px; max-width: 80%; }
+        .msg-them { background: #222; align-self: flex-start; }
+        .msg-me { background: var(--accent); color: black; align-self: flex-end; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .online { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
+        .offline { background: #555; }
     </style>
 </head>
 <body>
@@ -32,44 +53,84 @@
 <canvas id="canvas"></canvas>
 
 <div id="auth-overlay">
-    <div style="text-align:center;">
-        <h1 style="letter-spacing:10px; color:var(--accent);">COSMIC SOCIAL</h1>
-        <button class="primary-btn" onclick="login()">SIGN IN WITH GOOGLE</button>
+    <div>
+        <h1 style="letter-spacing:12px; color:var(--accent); font-size: 2.5rem;">COSMIC</h1>
+        <p style="color: #666; margin-bottom: 30px;">INTERSTELLAR SOCIAL NETWORK</p>
+        <button class="btn-primary" onclick="login()" style="padding: 15px 40px; font-size: 1rem;">SIGN IN WITH GOOGLE</button>
     </div>
 </div>
 
-<div class="ui-layer" id="app-ui">
+<div class="app-container" id="app-ui">
     <div class="sidebar">
-        <div class="profile-header">
-            <img id="my-avatar" class="avatar" src="">
-            <h4 id="my-name" style="margin:0;">COMM-LINK</h4>
+        <div style="padding: 30px 20px; text-align: center;">
+            <img id="user-pfp" class="avatar" src="" style="width: 70px; height: 70px;">
+            <h3 id="display-name" style="margin: 10px 0 0;">...</h3>
         </div>
-        <div style="display:flex; background:#050505;">
-            <button class="tab-btn active" id="btn-notes" onclick="showTab('notes')">MY NOTES</button>
-            <button class="tab-btn" id="btn-discover" onclick="showTab('discover')">SIGNALS</button>
-        </div>
-        <div id="notes-tab" class="list-container">
-            <button onclick="newNote()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:5px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ NEW ENTRY</button>
-            <div id="my-notes-list"></div>
-        </div>
-        <div id="discover-tab" class="list-container" style="display:none;">
-            <div id="discover-list"></div>
-        </div>
+        <div class="nav-item active" onclick="switchView('discover')">🔭 DISCOVER</div>
+        <div class="nav-item" onclick="switchView('new-note')">📝 NEW NOTE</div>
+        <div class="nav-item" onclick="switchView('my-notes')">📁 MY NOTES</div>
+        <div class="nav-item" onclick="switchView('chats')">💬 CHATS</div>
+        <div class="nav-item" onclick="switchView('profile')">👤 MY PROFILE</div>
     </div>
-    <div id="main-content">
-        <div style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center; pointer-events:auto; background:rgba(0,0,0,0.3);">
-            <select id="note-visibility" style="background:#000; color:white; border:1px solid #444; padding:5px;">
-                <option value="private">LOCAL (Private)</option>
-                <option value="public">BROADCAST (Public)</option>
-            </select>
-            <button onclick="saveNote()" style="background:var(--accent); border:none; padding:8px 20px; border-radius:4px; font-weight:bold; cursor:pointer;">SYNC TO CLOUD</button>
-        </div>
-        <div id="editor" contenteditable="true" spellcheck="false">Write your cosmic message here...</div>
+
+    <div class="main-view">
+        <section id="view-discover" class="view-section active">
+            <h2>Cosmic Signals</h2>
+            <div id="discover-feed"></div>
+        </section>
+
+        <section id="view-new-note" class="view-section">
+            <h2>Initialize Transmission</h2>
+            <div class="card">
+                <label>Note Content</label>
+                <textarea id="note-body" rows="8" placeholder="Type your thoughts..."></textarea>
+                <label>Visibility</label>
+                <select id="note-privacy">
+                    <option value="public">🌐 PUBLIC (Everyone can see)</option>
+                    <option value="private">🔒 PRIVATE (Only me)</option>
+                </select>
+                <button class="btn-primary" onclick="saveNote()" style="margin-top: 15px;">PUBLISH TO NEBULA</button>
+            </div>
+        </section>
+
+        <section id="view-my-notes" class="view-section">
+            <h2>Your Archives</h2>
+            <div id="personal-feed"></div>
+        </section>
+
+        <section id="view-chats" class="view-section">
+            <h2>Active Frequencies</h2>
+            <div id="friends-list" style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px;"></div>
+            <div id="chat-window" style="height: 400px; display: flex; flex-direction: column; background: #000; border-radius: 12px; padding: 15px;">
+                <div id="chat-messages" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input id="msg-input" placeholder="Type a message...">
+                    <button class="btn-primary" onclick="sendMessage()">SEND</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-profile" class="view-section">
+            <h2>Profile Decryption</h2>
+            <div class="card">
+                <label>Public Name</label>
+                <input id="profile-name" type="text">
+                <label>Gender Identification</label>
+                <select id="profile-gender">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+                <label>Profile Image URL</label>
+                <input id="profile-img" type="text">
+                <button class="btn-primary" onclick="updateProfile()" style="margin-top: 15px;">UPDATE PROFILE</button>
+            </div>
+        </section>
     </div>
 </div>
 
 <script>
-    // --- FIREBASE SETUP (Verified from image_477789) ---
+    // --- FIREBASE CONFIG (Using your verified credentials) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -79,124 +140,202 @@
         appId: "1:70656136344:web:640193b83f63cac569aced"
     };
 
-    // Initialize with error check
-    try {
-        firebase.initializeApp(firebaseConfig);
-    } catch(e) {
-        console.log("Firebase already initialized");
-    }
-
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let user = null;
-    let currentNoteId = null;
+    let currentUser = null;
+    let activeChatId = null;
 
-    // --- AUTHENTICATION ---
+    // --- AUTH & PROFILE ---
     function login() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then(res => {
-            user = res.user;
+        auth.signInWithPopup(provider).then(async (res) => {
+            currentUser = res.user;
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('app-ui').style.display = 'flex';
-            document.getElementById('my-name').innerText = user.displayName;
-            document.getElementById('my-avatar').src = user.photoURL;
-            loadMyNotes();
-            loadDiscover();
-        }).catch(err => {
-            alert("Security Error: " + err.message + "\nEnsure Google is ENABLED in Firebase Auth tab.");
+            
+            // 8. INITIALIZE/GET PROFILE
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (!userDoc.exists) {
+                await db.collection('users').doc(currentUser.uid).set({
+                    name: currentUser.displayName,
+                    photo: currentUser.photoURL,
+                    gender: 'other',
+                    status: 'online',
+                    friends: []
+                });
+            }
+            loadProfileData();
+            updatePresence(true);
+            loadDiscoverFeed();
         });
     }
 
-    // --- NOTES FUNCTIONS ---
-    function newNote() {
-        currentNoteId = "note_" + Date.now();
-        document.getElementById('editor').innerHTML = "";
+    function updatePresence(isOnline) {
+        if (!currentUser) return;
+        db.collection('users').doc(currentUser.uid).update({ 
+            status: isOnline ? 'online' : 'offline',
+            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
 
+    function loadProfileData() {
+        db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+            const data = doc.data();
+            document.getElementById('display-name').innerText = data.name;
+            document.getElementById('user-pfp').src = data.photo;
+            document.getElementById('profile-name').value = data.name;
+            document.getElementById('profile-gender').value = data.gender;
+            document.getElementById('profile-img').value = data.photo;
+        });
+    }
+
+    async function updateProfile() {
+        await db.collection('users').doc(currentUser.uid).update({
+            name: document.getElementById('profile-name').value,
+            gender: document.getElementById('profile-gender').value,
+            photo: document.getElementById('profile-img').value
+        });
+        alert("Profile Synced.");
+    }
+
+    // --- NOTES SYSTEM (PUBLIC vs PRIVATE) ---
     async function saveNote() {
-        if(!user) return;
-        const content = document.getElementById('editor').innerHTML;
-        const visibility = document.getElementById('note-visibility').value;
-        if(!currentNoteId) currentNoteId = "note_" + Date.now();
-
-        await db.collection('notes').doc(currentNoteId).set({
-            content: content,
-            owner: user.uid,
-            ownerName: user.displayName,
-            visibility: visibility,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        const content = document.getElementById('note-body').value;
+        const privacy = document.getElementById('note-privacy').value;
+        await db.collection('notes').add({
+            content,
+            visibility: privacy,
+            owner: currentUser.uid,
+            ownerName: currentUser.displayName,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Transmission Synced.");
+        document.getElementById('note-body').value = '';
+        alert("Note Transmitted.");
+        switchView('my-notes');
+        loadPersonalNotes();
     }
 
-    function loadMyNotes() {
-        db.collection('notes').where('owner', '==', user.uid).onSnapshot(snap => {
-            const list = document.getElementById('my-notes-list');
-            list.innerHTML = '';
+    function loadDiscoverFeed() {
+        db.collection('notes').where('visibility', '==', 'public').limit(20).onSnapshot(snap => {
+            const container = document.getElementById('discover-feed');
+            container.innerHTML = '';
             snap.forEach(doc => {
-                const item = document.createElement('div');
-                item.className = 'note-card';
-                item.innerHTML = `<strong>${doc.data().visibility.toUpperCase()}</strong><br>${doc.data().content.replace(/<[^>]*>/g, '').substring(0,25)}...`;
-                item.onclick = () => {
-                    currentNoteId = doc.id;
-                    document.getElementById('editor').innerHTML = doc.data().content;
-                };
-                list.appendChild(item);
+                const n = doc.data();
+                container.innerHTML += `
+                    <div class="card">
+                        <h4>${n.ownerName}</h4>
+                        <p>${n.content}</p>
+                        <button class="btn-ghost" onclick="startChat('${n.owner}')">Message Publisher</button>
+                    </div>`;
             });
         });
     }
 
-    function loadDiscover() {
-        db.collection('notes').where('visibility', '==', 'public').onSnapshot(snap => {
-            const list = document.getElementById('discover-list');
-            list.innerHTML = '';
+    function loadPersonalNotes() {
+        db.collection('notes').where('owner', '==', currentUser.uid).onSnapshot(snap => {
+            const container = document.getElementById('personal-feed');
+            container.innerHTML = '';
             snap.forEach(doc => {
-                if(doc.data().owner === user.uid) return;
-                const item = document.createElement('div');
-                item.className = 'note-card';
-                item.innerHTML = `<small>From: ${doc.data().ownerName}</small><br>${doc.data().content.replace(/<[^>]*>/g, '').substring(0,35)}...`;
-                list.appendChild(item);
+                const n = doc.data();
+                container.innerHTML += `<div class="card"><strong>[${n.visibility}]</strong><p>${n.content}</p></div>`;
             });
         });
     }
 
-    function showTab(id) {
-        document.getElementById('notes-tab').style.display = id === 'notes' ? 'block' : 'none';
-        document.getElementById('discover-tab').style.display = id === 'discover' ? 'block' : 'none';
-        document.getElementById('btn-notes').classList.toggle('active', id === 'notes');
-        document.getElementById('btn-discover').classList.toggle('active', id === 'discover');
+    // --- CHAT & FRIENDS SYSTEM ---
+    function startChat(otherId) {
+        if(otherId === currentUser.uid) return;
+        activeChatId = [currentUser.uid, otherId].sort().join('_');
+        switchView('chats');
+        loadMessages();
     }
 
-    // --- ANIMATED BACKGROUND ---
+    function loadMessages() {
+        if(!activeChatId) return;
+        db.collection('chats').doc(activeChatId).collection('messages').orderBy('time').onSnapshot(snap => {
+            const box = document.getElementById('chat-messages');
+            box.innerHTML = '';
+            snap.forEach(doc => {
+                const m = doc.data();
+                const cls = m.sender === currentUser.uid ? 'msg-me' : 'msg-them';
+                box.innerHTML += `<div class="chat-msg ${cls}">${m.text}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    async function sendMessage() {
+        const text = document.getElementById('msg-input').value;
+        if(!text || !activeChatId) return;
+        await db.collection('chats').doc(activeChatId).collection('messages').add({
+            text, sender: currentUser.uid, time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('msg-input').value = '';
+    }
+
+    // --- UI NAVIGATION ---
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('view-' + viewId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(viewId === 'my-notes') loadPersonalNotes();
+    }
+
+    // --- 9. ADAPTIVE BACKGROUND (MOBILE vs PC) ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
-    function init() {
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let mouse = { x: 0, y: 0 };
+    let ctrlPressed = false;
+
+    window.addEventListener('resize', initStars);
+    if(!isMobile) {
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('keydown', e => { if(e.key === 'Control') ctrlPressed = true; });
+        window.addEventListener('keyup', e => { if(e.key === 'Control') ctrlPressed = false; });
+    }
+
+    function initStars() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        stars = [];
-        for(let i=0; i<200; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5 });
+        stars = Array.from({length: 200}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            z: Math.random() * canvas.width,
+            size: Math.random() * 1.5
+        }));
     }
-    function draw() {
-        ctx.fillStyle = '#000005'; ctx.fillRect(0,0,canvas.width, canvas.height);
-        ctx.fillStyle = '#fff';
+
+    function animate() {
+        ctx.fillStyle = '#000005';
+        ctx.fillRect(0,0,canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+
         stars.forEach(s => {
-            s.y -= s.v; if(s.y < 0) s.y = canvas.height;
-            ctx.beginPath(); ctx.arc(s.x, s.y, 1, 0, Math.PI*2); ctx.fill();
+            if (isMobile) {
+                // Mobile: Stars move very slowly automatically
+                s.x += 0.2;
+                if(s.x > canvas.width) s.x = 0;
+            } else {
+                // Laptop: Hover & Ctrl interaction
+                let speed = ctrlPressed ? 5 : 1;
+                let dx = (mouse.x - canvas.width/2) * 0.01 * speed;
+                let dy = (mouse.y - canvas.height/2) * 0.01 * speed;
+                s.x -= dx; s.y -= dy;
+                if(s.x < 0) s.x = canvas.width; if(s.x > canvas.width) s.x = 0;
+                if(s.y < 0) s.y = canvas.height; if(s.y > canvas.height) s.y = 0;
+            }
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+            ctx.fill();
         });
-        requestAnimationFrame(draw);
+        requestAnimationFrame(animate);
     }
-    window.addEventListener('resize', init);
-    init(); draw();
+
+    initStars(); animate();
+    window.onbeforeunload = () => updatePresence(false);
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
