@@ -24,7 +24,6 @@
             display: flex; flex-direction: column; transition: 0.3s; pointer-events: auto;
         }
         
-        /* MOBILE ADJUSTMENTS */
         @media (max-width: 768px) {
             .sidebar { position: fixed; left: -300px; height: 100%; z-index: 100; }
             .sidebar.active { left: 0; }
@@ -36,13 +35,11 @@
             background: var(--accent); border: none; padding: 10px; border-radius: 5px; color: black; font-weight: bold;
         }
 
-        /* TABS & BUTTONS */
         .tab-btn { background: none; border: none; color: #888; padding: 15px; cursor: pointer; text-align: left; width: 100%; border-bottom: 1px solid #111; font-weight: bold; font-size: 0.75rem; }
         .tab-btn.active { color: var(--accent); background: rgba(0, 210, 255, 0.05); }
         .list-container { flex-grow: 1; overflow-y: auto; padding: 10px; }
         .note-card { background: #111; padding: 12px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; border: 1px solid #222; }
         
-        /* EDITOR */
         #main-content { flex-grow: 1; display: flex; flex-direction: column; pointer-events: none; }
         #editor { 
             flex-grow: 1; margin: 20px; background: rgba(255,255,255,0.03); 
@@ -108,16 +105,14 @@
 
 <script>
     // --- FIREBASE CONFIGURATION ---
-    const firebaseConfig = {const firebaseConfig = {
-  apiKey: "AIzaSyAxbB0THzXG5W_R1i0zVmh-TxzWOE1uDhM",
-  authDomain: "cosmic-notes-f7648.firebaseapp.com",
-  projectId: "cosmic-notes-f7648",
-  storageBucket: "cosmic-notes-f7648.firebasestorage.app",
-  messagingSenderId: "70656136344",
-  appId: "1:70656136344:web:640193b83f63cac569aced",
-  measurementId: "G-3RPC15RWG1"
-};
-        
+    const firebaseConfig = {
+        apiKey: "AIzaSyAxbB0THzXG5W_R1i0zVmh-TxzWOE1uDhM",
+        authDomain: "cosmic-notes-f7648.firebaseapp.com",
+        projectId: "cosmic-notes-f7648",
+        storageBucket: "cosmic-notes-f7648.firebasestorage.app",
+        messagingSenderId: "70656136344",
+        appId: "1:70656136344:web:640193b83f63cac569aced",
+        measurementId: "G-3RPC15RWG1"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -130,8 +125,11 @@
 
     // --- AUTHENTICATION ---
     function login() {
+        // Create the Google Provider
         const provider = new firebase.auth.GoogleAuthProvider();
+        
         auth.signInWithPopup(provider).then(res => {
+            console.log("Login successful!");
             user = res.user;
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('app-ui').style.display = 'flex';
@@ -147,7 +145,10 @@
             loadMyNotes();
             loadDiscover();
             loadChats();
-        }).catch(err => alert("Error: " + err.message));
+        }).catch(err => {
+            console.error("Login failed:", err);
+            alert("Error: " + err.message);
+        });
     }
 
     // --- NOTES ENGINE ---
@@ -235,7 +236,7 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'btn-' + id));
     }
 
-    // --- 3D STAR ENGINE (MOBILE DRIFT OPTIMIZED) ---
+    // --- 3D STAR ENGINE ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
@@ -249,7 +250,7 @@
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
                 z: Math.random() * canvas.width,
-                dx: (Math.random() - 0.5) * 0.1, // Slow drift for mobile
+                dx: (Math.random() - 0.5) * 0.1,
                 dy: (Math.random() - 0.5) * 0.1
             });
         }
@@ -262,13 +263,11 @@
         
         stars.forEach(s => {
             if(isMobile) {
-                // Mobile Slow Drift Logic
                 s.x += s.dx; s.y += s.dy;
                 if(s.x < 0) s.x = canvas.width; if(s.x > canvas.width) s.x = 0;
                 if(s.y < 0) s.y = canvas.height; if(s.y > canvas.height) s.y = 0;
                 ctx.beginPath(); ctx.arc(s.x, s.y, 0.7, 0, Math.PI*2); ctx.fill();
             } else {
-                // Desktop Warp Speed Logic
                 s.z -= 2; if(s.z <= 0) s.z = canvas.width;
                 let x = (s.x - canvas.width/2) * (canvas.width/s.z) + canvas.width/2;
                 let y = (s.y - canvas.height/2) * (canvas.width/s.z) + canvas.height/2;
@@ -284,6 +283,7 @@
 </script>
 </body>
 </html>
+
 
 
 
