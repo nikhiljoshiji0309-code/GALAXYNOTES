@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Sovereign | Eternal Edition</title>
+    <title>Nexus Sovereign | Total Singularity</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -11,324 +11,299 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <style>
-        /* --- DESIGN SYSTEM & VARIABLES --- */
-        :root { 
-            --accent: #00d2ff; 
-            --accent-glow: rgba(0, 210, 255, 0.4);
-            --bg: #03030b; 
-            --panel: rgba(10, 10, 18, 0.98);
-            --wa-sent: #005c4b; 
-            --wa-received: #202c33; 
-            --border: rgba(0, 210, 255, 0.15);
-            --danger: #ff3b3b; 
-            --online: #00ff88; 
-            --away: #ffbb00; 
-            --offline: #555;
-            --text-main: #f0f0f0;
-            --text-dim: #a0a0a0;
+        /* --- SUPREME DESIGN SYSTEM (LEVEL 5) --- */
+        :root {
+            --primary: #00d2ff;
+            --primary-glow: rgba(0, 210, 255, 0.4);
+            --secondary: #7000ff;
+            --bg-dark: #020205;
+            --surface: #0a0a12;
+            --wa-green: #00a884;
+            --reddit-orange: #ff4500;
+            --discord-blurple: #5865f2;
+            --text-main: #e0e0e0;
+            --text-dim: #808080;
+            --danger: #ff4b4b;
+            --success: #00ff88;
+            --border-spec: 1px solid rgba(255, 255, 255, 0.08);
+            --glass: rgba(10, 10, 20, 0.85);
         }
 
-        /* --- RESET & CORE STYLES --- */
-        * { box-sizing: border-box; outline: none; }
+        /* --- CORE RESET & ANIMATIONS --- */
+        * { box-sizing: border-box; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
         body, html { 
-            margin: 0; padding: 0; 
-            background: var(--bg); 
-            color: var(--text-main); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            height: 100vh; width: 100vw;
-            overflow: hidden; 
+            margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-main);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            height: 100vh; width: 100vw; overflow: hidden;
         }
 
-        /* --- BACKGROUND STAR ENGINE --- */
-        #star-canvas { 
-            position: fixed; inset: 0; z-index: 0; 
-            pointer-events: none; background: radial-gradient(circle at center, #06061a 0%, #000 100%);
+        @keyframes nebulaPulse { 0% { opacity: 0.4; } 50% { opacity: 0.8; } 100% { opacity: 0.4; } }
+        @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+        /* --- SYSTEM LOADER --- */
+        #master-loader {
+            position: fixed; inset: 0; z-index: 9999; background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .orbit-spinner {
+            width: 100px; height: 100px; border: 2px solid transparent;
+            border-top: 2px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; position: relative;
+        }
+        .orbit-spinner::before {
+            content: ''; position: absolute; inset: 5px; border: 2px solid transparent;
+            border-top: 2px solid var(--secondary); border-radius: 50%; animation: spin 2s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- BACKGROUND LAYER --- */
+        #galaxy-engine { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* --- MASTER LAYOUT --- */
+        .singularity-grid {
+            display: none; height: 100vh; width: 100vw; position: relative; z-index: 10;
+            grid-template-columns: 72px 300px 1fr 280px;
         }
 
-        /* --- GLOBAL PROGRESS BAR --- */
-        #progress-bar { 
-            position: fixed; top: 0; left: 0; height: 3px; 
-            background: linear-gradient(90deg, transparent, var(--accent), transparent); 
-            width: 0%; transition: width 0.4s cubic-bezier(0.1, 0.7, 1.0, 0.1); 
-            z-index: 5000; box-shadow: 0 0 10px var(--accent);
+        /* 1. SECTOR NAV (Discord Style) */
+        .sector-nav { 
+            background: #050508; border-right: var(--border-spec);
+            display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 12px;
         }
+        .sector-btn {
+            width: 48px; height: 48px; border-radius: 50%; background: #11111a;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: 0.3s; border: 2px solid transparent; overflow: hidden;
+        }
+        .sector-btn:hover, .sector-btn.active { border-radius: 16px; background: var(--primary); color: #000; border-color: var(--primary-glow); }
+        .divider { width: 32px; height: 2px; background: #222; border-radius: 1px; }
 
-        /* --- ANIMATIONS --- */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 210, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); } }
-
-        /* --- AUTH GATE --- */
-        #auth-gate { 
-            position: fixed; inset: 0; z-index: 4000; 
-            background: black; display: flex; 
-            flex-direction: column; align-items: center; justify-content: center; 
-            text-align: center;
+        /* 2. FREQUENCY LIST (WhatsApp Style) */
+        .frequency-list { 
+            background: #0a0a14; border-right: var(--border-spec);
+            display: flex; flex-direction: column;
         }
-        .gate-logo {
-            font-size: 3rem; font-weight: 900; color: var(--accent);
-            letter-spacing: 20px; text-shadow: 0 0 30px var(--accent);
-            margin-bottom: 10px; animation: fadeIn 2s ease;
+        .list-header { padding: 24px 16px; border-bottom: var(--border-spec); }
+        .search-container {
+            background: #161625; border-radius: 8px; padding: 8px 12px;
+            display: flex; align-items: center; border: 1px solid transparent;
         }
-
-        /* --- IDENTITY LOCK OVERLAY --- */
-        #identity-lock { 
-            position: fixed; inset: 0; z-index: 3000; 
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); 
-            display: none; align-items: center; justify-content: center; padding: 20px; 
-        }
-        .lock-box { 
-            background: #111b21; padding: 40px; border-radius: 30px; 
-            border: 1px solid var(--border); max-width: 500px; width: 100%; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideUp 0.5s ease;
-        }
-
-        /* --- APP WRAPPER --- */
-        .nexus-wrapper { 
-            display: none; height: 100vh; width: 100vw; 
-            position: relative; z-index: 10; flex-direction: row; 
-            animation: fadeIn 1s ease;
-        }
-
-        /* --- SIDEBAR --- */
-        .sidebar { 
-            width: 400px; background: var(--panel); 
-            border-right: 1px solid var(--border); 
-            display: flex; flex-direction: column; 
-            z-index: 100; transition: transform 0.3s ease;
-        }
+        .search-container:focus-within { border-color: var(--primary); }
+        .search-container input { background: none; border: none; color: white; margin-left: 8px; width: 100%; outline: none; }
         
-        .sidebar-header { padding: 20px; background: #111b21; }
-        .search-container { position: relative; width: 100%; }
-        .search-input { 
-            width: 100%; padding: 12px 20px 12px 45px; 
-            border-radius: 25px; border: 1px solid #333; 
-            background: #2a3942; color: #fff; font-size: 0.9rem;
-        }
-        .search-icon { position: absolute; left: 18px; top: 13px; opacity: 0.5; }
-
-        #search-results { 
-            position: absolute; top: 55px; left: 0; width: 100%; 
-            background: #1c2a33; border-radius: 15px; border: 1px solid var(--accent);
-            display: none; z-index: 500; overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-
-        .tab-bar { display: flex; background: #111b21; border-bottom: 1px solid #222; }
-        .tab-item { 
-            flex: 1; padding: 18px; text-align: center; 
-            font-size: 0.75rem; font-weight: bold; cursor: pointer;
-            color: var(--text-dim); border-bottom: 3px solid transparent; transition: 0.3s;
-        }
-        .tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-        .list-area { flex: 1; overflow-y: auto; scrollbar-width: thin; }
-        .chat-row { 
-            padding: 15px 20px; border-bottom: 1px solid #1a1a1a; 
-            cursor: pointer; display: flex; align-items: center; gap: 15px; 
-            transition: 0.2s;
-        }
-        .chat-row:hover { background: rgba(255,255,255,0.03); }
-        .avatar-circle { 
-            width: 50px; height: 50px; border-radius: 50%; 
-            background: #333; display: flex; align-items: center; 
-            justify-content: center; font-weight: bold; color: var(--accent);
-            border: 1px solid var(--border);
-        }
-
-        /* --- MAIN STAGE --- */
-        .main-stage { 
-            flex: 1; display: flex; flex-direction: column; 
-            background: rgba(11, 20, 26, 0.9); position: relative;
-        }
+        .scroll-area { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .scroll-area::-webkit-scrollbar { display: none; }
         
-        .stage-header { 
-            padding: 12px 25px; background: #202c33; 
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid #333; height: 70px;
+        .list-item {
+            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer; display: flex; gap: 12px; align-items: center;
         }
+        .list-item:hover { background: rgba(255,255,255,0.05); }
+        .list-item.active { background: rgba(0, 210, 255, 0.1); border-left: 3px solid var(--primary); }
 
-        .message-viewport { 
-            flex: 1; overflow-y: auto; padding: 30px; 
-            display: flex; flex-direction: column; gap: 12px;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-repeat: repeat; background-attachment: fixed;
+        /* 3. CORE STAGE (Reddit / Message Engine) */
+        .core-stage { background: rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Message Engine Styles */
+        #messenger-view { display: none; flex-direction: column; height: 100%; }
+        .stage-header { height: 64px; background: var(--glass); backdrop-filter: blur(10px); border-bottom: var(--border-spec); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        .msg-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background-image: radial-gradient(#111 1px, transparent 1px); background-size: 20px 20px; }
+        
+        .bubble { 
+            max-width: 70%; padding: 12px 16px; border-radius: 12px; position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideInRight 0.3s ease;
+            line-height: 1.5; font-size: 0.95rem;
         }
+        .bubble.sent { align-self: flex-end; background: var(--wa-green); border-bottom-right-radius: 2px; }
+        .bubble.received { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
 
-        /* --- MESSAGE BUBBLES --- */
-        .msg-bubble { 
-            max-width: 65%; padding: 10px 15px; border-radius: 15px; 
-            font-size: 0.95rem; line-height: 1.5; position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); word-wrap: break-word;
+        /* Reddit Engine Styles */
+        #reddit-view { display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; }
+        .post-card {
+            background: #1a1a1b; border: 1px solid #343536; border-radius: 8px;
+            margin-bottom: 16px; display: flex; transition: 0.2s;
         }
-        .msg-sent { 
-            align-self: flex-end; background: var(--wa-sent); 
-            border-top-right-radius: 2px; color: #e9edef;
+        .post-card:hover { border-color: #818384; }
+        .post-votes { 
+            width: 48px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; 
+            align-items: center; padding: 12px 0; border-radius: 8px 0 0 8px;
         }
-        .msg-received { 
-            align-self: flex-start; background: var(--wa-received); 
-            border-top-left-radius: 2px; color: #e9edef;
-        }
-        .msg-image { 
-            width: 100%; max-width: 300px; border-radius: 10px; 
-            margin-bottom: 8px; cursor: pointer; display: block;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .msg-info { 
-            font-size: 0.65rem; opacity: 0.6; margin-top: 5px; 
-            text-align: right; font-weight: 600; 
-        }
+        .post-body { padding: 16px; flex: 1; }
+        .post-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; color: #d7dadc; }
+        
+        /* 4. NEURAL ARCHIVE (Note Sharing) */
+        .neural-sidebar { background: #050508; border-left: var(--border-spec); padding: 20px; display: flex; flex-direction: column; }
+        .user-profile { text-align: center; margin-bottom: 30px; }
+        .avatar-huge { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--secondary)); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; color: white; border: 4px solid #111; }
 
-        /* --- INPUT BAR --- */
+        /* --- NEURAL INPUT SYSTEM --- */
+        .input-anchor { padding: 20px; background: var(--glass); border-top: var(--border-spec); }
         .input-bar { 
-            padding: 10px 20px; background: #202c33; 
-            display: flex; align-items: center; gap: 15px;
+            background: #2a3942; border-radius: 24px; display: flex; align-items: center; 
+            padding: 10px 20px; gap: 12px;
         }
-        .action-icon { cursor: pointer; font-size: 1.4rem; color: #8696a0; transition: 0.2s; }
-        .action-icon:hover { color: var(--accent); }
-        .main-input { 
-            flex: 1; background: #2a3942; border: none; padding: 12px 20px; 
-            border-radius: 25px; color: #fff; font-size: 0.95rem;
-        }
+        .neural-content { flex: 1; background: none; border: none; color: white; outline: none; min-height: 24px; max-height: 200px; overflow-y: auto; }
+        .icon-btn { cursor: pointer; opacity: 0.6; transition: 0.2s; }
+        .icon-btn:hover { opacity: 1; color: var(--primary); }
 
-        /* --- NEBULA FEED STYLES --- */
-        .nebula-container { padding: 30px; display: none; overflow-y: auto; flex: 1; }
-        .nebula-post { 
-            background: #111b21; padding: 25px; border-radius: 20px; 
-            border: 1px solid var(--border); margin-bottom: 25px;
-            transition: 0.3s;
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.9);
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
-        .nebula-post:hover { border-color: var(--accent); }
-        .post-author { color: var(--accent); font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
-        .post-title { font-size: 1.2rem; margin: 5px 0 10px 0; letter-spacing: 0.5px; }
-        .post-body { opacity: 0.8; line-height: 1.6; font-size: 0.95rem; }
-
-        /* --- STATUS DOTS --- */
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
-        .away { background: var(--away); box-shadow: 0 0 8px var(--away); }
-        .cloaked { background: var(--offline); }
-
-        /* --- UI COMPONENTS --- */
-        .btn-primary { 
-            background: var(--accent); color: #000; font-weight: bold; 
-            padding: 14px; border-radius: 50px; border: none; cursor: pointer;
-            width: 100%; transition: 0.3s; margin-top: 15px;
+        .modal-content {
+            background: var(--surface); padding: 40px; border-radius: 24px; border: 1px solid var(--primary);
+            width: 100%; max-width: 450px; text-align: center;
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
-        
-        input[type="text"], textarea, select { 
-            width: 100%; padding: 14px; background: #2a3942; 
-            border: 1px solid #333; color: #fff; border-radius: 12px; margin-top: 10px;
+        .form-group { margin-bottom: 20px; text-align: left; }
+        input[type="text"], textarea, select {
+            width: 100%; padding: 14px; background: #1a1a25; border: 1px solid #333;
+            color: white; border-radius: 12px; margin-top: 8px;
         }
+        .btn-prime {
+            background: var(--primary); color: #000; border: none; padding: 16px;
+            border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer;
+            transition: 0.3s; letter-spacing: 1px;
+        }
+        .btn-prime:hover { box-shadow: 0 0 20px var(--primary-glow); transform: translateY(-2px); }
 
         /* --- MOBILE RESPONSIVENESS --- */
-        @media (max-width: 800px) {
-            .sidebar { width: 100%; }
-            .main-stage { 
-                position: fixed; inset: 0; display: none; z-index: 1000;
-            }
-            .main-stage.active { display: flex; }
-            #back-btn { display: block !important; }
+        @media (max-width: 1000px) {
+            .singularity-grid { grid-template-columns: 72px 1fr; }
+            .neural-sidebar, .frequency-list { display: none; }
+            .frequency-list.active-mobile { display: flex; position: absolute; left: 72px; top: 0; bottom: 0; right: 0; z-index: 100; }
         }
     </style>
 </head>
 <body>
 
-<div id="progress-bar"></div>
-<canvas id="star-canvas"></canvas>
-
-<div id="auth-gate">
-    <div class="gate-logo">NEXUS</div>
-    <p style="color:var(--text-dim); margin-bottom:30px; letter-spacing:2px;">SOVEREIGN OMNIA PROTOCOL</p>
-    <button class="btn-primary" style="width:250px;" onclick="handleLogin()">INITIALIZE SYNC</button>
+<div id="master-loader">
+    <div class="orbit-spinner"></div>
+    <h2 style="letter-spacing: 8px; margin-top: 30px; color: var(--primary);">SINGULARITY</h2>
+    <p style="opacity: 0.4; font-size: 0.8rem;">INITIALIZING NEURAL LAYERS...</p>
 </div>
 
-<div id="identity-lock">
-    <div class="lock-box">
-        <h2 style="color:var(--accent); margin:0 0 10px 0;">PILOT CREDENTIALS</h2>
-        <p style="color:var(--text-dim); font-size:0.85rem; margin-bottom:20px;">Identity setup is mandatory for neural-link sync.</p>
-        
-        <label style="font-size:0.7rem; color:var(--accent);">PILOT CALLSIGN</label>
-        <input type="text" id="pilot-name" placeholder="e.g. Ghost_One">
-        
-        <label style="font-size:0.7rem; color:var(--accent); margin-top:15px; display:block;">STATUS FREQUENCY</label>
-        <select id="pilot-status">
-            <option value="online">🟢 Active (Online)</option>
-            <option value="away">🟡 Deep Sleep (Away)</option>
-            <option value="cloaked">⚪ Stealth Mode (Cloaked)</option>
-        </select>
-        
-        <label style="font-size:0.7rem; color:var(--accent); margin-top:15px; display:block;">MISSION BIO</label>
-        <textarea id="pilot-bio" maxlength="100" placeholder="Describe your mission in the stars..."></textarea>
-        
-        <button class="btn-primary" onclick="submitIdentity()">COMMIT TO CORE</button>
-        <button id="close-modal-btn" onclick="toggleIdentityModal(false)" style="background:none; color:#555; border:none; margin-top:10px; cursor:pointer; display:none;">CANCEL CHANGES</button>
+<canvas id="galaxy-engine"></canvas>
+
+<div id="auth-gate" class="modal-overlay" style="display: flex;">
+    <div class="modal-content">
+        <h1 style="color: var(--primary); letter-spacing: 12px;">NEXUS</h1>
+        <p style="opacity: 0.5; margin-bottom: 30px;">SOVEREIGN OMNIPOTENCE PROTOCOL</p>
+        <button class="btn-prime" onclick="initiateAuth()">INITIATE SECURE LINK</button>
+        <p id="auth-feedback" style="margin-top: 15px; font-size: 0.8rem; color: var(--danger);"></p>
     </div>
 </div>
 
-<div class="nexus-wrapper" id="app">
+<div id="identity-gate" class="modal-overlay">
+    <div class="modal-content">
+        <h2>IDENT_SETUP</h2>
+        <div class="form-group">
+            <label>PILOT CALLSIGN</label>
+            <input type="text" id="setup-name" placeholder="e.g. Ghost-9">
+        </div>
+        <div class="form-group">
+            <label>BIO TRANSMISSION</label>
+            <textarea id="setup-bio" placeholder="Your mission statement..."></textarea>
+        </div>
+        <button class="btn-prime" onclick="finalizeIdentity()">ESTABLISH IDENTITY</button>
+    </div>
+</div>
+
+<div class="singularity-grid" id="main-ui">
     
-    <aside class="sidebar">
-        <div class="sidebar-header">
+    <nav class="sector-nav">
+        <div class="sector-btn active" onclick="switchMainTab('global', this)" title="Global Nebula">🌌</div>
+        <div class="divider"></div>
+        <div id="sovereignty-list"></div>
+        <div class="sector-btn" onclick="toggleModal('create-comm')" style="color: var(--primary);">+</div>
+        <div style="flex: 1;"></div>
+        <div class="sector-btn" onclick="handleLogout()" title="Disconnect" style="color: var(--danger);">⏻</div>
+    </nav>
+
+    <aside class="frequency-list">
+        <div class="list-header">
             <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="pilot-search" placeholder="Search Pilots..." oninput="executePilotSearch()">
-                <div id="search-results"></div>
+                <span>🔍</span>
+                <input type="text" id="orbital-search" placeholder="Search Neural IDs..." oninput="executeSearch()">
             </div>
+            <div id="search-results" style="display:none; background: #161625; margin-top:10px; border-radius: 8px; overflow:hidden;"></div>
         </div>
         
-        <div class="tab-bar">
-            <div class="tab-item active" onclick="navigate('chats', this)">CHATS</div>
-            <div class="tab-item" onclick="navigate('nebula', this)">NEBULA</div>
-            <div class="tab-item" onclick="toggleIdentityModal(true)">PROFILE</div>
+        <div style="display: flex; border-bottom: var(--border-spec);">
+            <div class="list-tab active" id="tab-posts" onclick="setListMode('posts')" style="flex:1; padding: 15px; text-align: center; cursor: pointer; border-bottom: 2px solid var(--primary);">BROADCASTS</div>
+            <div class="list-tab" id="tab-chats" onclick="setListMode('chats')" style="flex:1; padding: 15px; text-align: center; cursor: pointer; opacity: 0.5;">DIRECT</div>
         </div>
-        
-        <div class="list-area" id="list-container">
+
+        <div class="scroll-area" id="master-list">
             </div>
     </aside>
 
-    <main class="main-stage" id="main-stage">
+    <main class="core-stage">
         
-        <div id="chat-view" style="display:flex; flex-direction:column; height:100%;">
-            <header class="stage-header">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <button id="back-btn" onclick="closeChatMobile()" style="display:none; background:none; border:none; color:var(--accent); font-size:1.5rem; cursor:pointer;">←</button>
-                    <div class="avatar-circle" id="header-avatar">?</div>
-                    <div>
-                        <div id="header-name" style="font-weight:bold; color:var(--accent);">SELECT CHANNEL</div>
-                        <div id="header-status" style="font-size:0.7rem; opacity:0.6;">WAITING FOR SYNC...</div>
-                    </div>
-                </div>
-                <button onclick="handleLogout()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:5px 12px; border-radius:5px; font-size:0.7rem; cursor:pointer;">DISCONNECT</button>
-            </header>
-            
-            <div class="message-viewport" id="message-viewport">
-                </div>
-            
-            <footer class="input-bar">
-                <label for="img-upload" class="action-icon">📎</label>
-                <input type="file" id="img-upload" style="display:none" accept="image/*" onchange="processImageUpload(this)">
-                <input type="text" class="main-input" id="msg-input" placeholder="Transmit message..." onkeypress="if(event.key==='Enter') sendTransmission()">
-                <div class="action-icon" onclick="sendTransmission()">➤</div>
-            </footer>
-        </div>
-
-        <div id="nebula-view" class="nebula-container">
-            <div style="background:#111b21; padding:25px; border-radius:20px; border:1px solid var(--border); margin-bottom:30px;">
-                <h3 style="margin:0 0 15px 0; color:var(--accent);">GLOBAL BROADCAST</h3>
-                <input type="text" id="nebula-h" placeholder="Subject">
-                <textarea id="nebula-b" placeholder="Broadcast to the galaxy..." style="height:80px;"></textarea>
-                <button class="btn-primary" onclick="publishToNebula()">ENGAGE TRANSMISSION</button>
+        <div id="reddit-view">
+            <div style="background: var(--surface); padding: 24px; border-radius: 12px; border: var(--border-spec); margin-bottom: 24px;">
+                <h3 style="margin:0 0 15px 0;">New Nebula Broadcast</h3>
+                <input type="text" id="post-title" placeholder="Transmission Subject">
+                <textarea id="post-body" placeholder="Broadcast content..." style="height: 100px; margin-top: 10px;"></textarea>
+                <button class="btn-prime" style="margin-top: 15px;" onclick="publishBroadcast()">EMIT TO SECTOR</button>
             </div>
-            <div id="nebula-feed-list"></div>
+            <div id="broadcast-feed"></div>
         </div>
 
+        <div id="messenger-view">
+            <div class="stage-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="chat-avatar" class="sector-btn" style="width:36px; height:36px; background:var(--primary); color:black;">?</div>
+                    <div id="chat-target-name" style="font-weight:bold;">Select a Pilot</div>
+                </div>
+            </div>
+            <div class="msg-container" id="msg-render"></div>
+            <div class="input-anchor">
+                <div class="input-bar">
+                    <label for="img-up" class="icon-btn">📎</label>
+                    <input type="file" id="img-up" style="display:none" onchange="uploadVisual(this)">
+                    <div contenteditable="true" id="chat-input" class="neural-content" data-placeholder="Neural transmission..."></div>
+                    <div class="icon-btn" onclick="sendDirectMsg()">➤</div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <section class="neural-sidebar">
+        <div class="user-profile">
+            <div class="avatar-huge" id="my-avatar">?</div>
+            <h3 id="my-name" style="margin: 10px 0 5px;">Pilot_ID</h3>
+            <p id="my-rep" style="color: var(--reddit-orange); font-size: 0.8rem; font-weight: bold;">REP: 0 CR</p>
+        </div>
+        
+        <div style="flex: 1;">
+            <h4 style="font-size: 0.7rem; color: var(--text-dim); letter-spacing: 2px;">NEURAL ARCHIVE (NOTES)</h4>
+            <div id="note-list" style="margin-top: 15px;">
+                </div>
+        </div>
+        <button class="btn-prime" style="padding: 10px; background: #111; color: var(--primary); border: 1px solid var(--primary);" onclick="createNewNote()">+ ARCHIVE DATA</button>
+    </section>
+</div>
+
+<div id="create-comm" class="modal-overlay">
+    <div class="modal-content">
+        <h2>ESTABLISH_SECTOR</h2>
+        <div class="form-group">
+            <label>SECTOR NAME</label>
+            <input type="text" id="comm-name" placeholder="Name of the sovereignty">
+        </div>
+        <div class="form-group">
+            <label>PROTOCOL DESCRIPTION</label>
+            <textarea id="comm-desc" placeholder="Sector mission details..."></textarea>
+        </div>
+        <button class="btn-prime" onclick="createSovereignty()">COMMIT SECTOR</button>
+        <button onclick="toggleModal('create-comm')" style="background:none; border:none; color:gray; margin-top:15px; cursor:pointer;">CANCEL</button>
+    </div>
 </div>
 
 <script>
-    // --- FIREBASE INITIALIZATION ---
+    /* --- FIREBASE SINGULARITY CORE --- */
     const firebaseConfig = {
         apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -339,334 +314,296 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
     const auth = firebase.auth();
+    const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // --- GLOBAL STATE ---
-    let currentUser = null;
-    let activeChatId = null;
-    let msgUnsubscribe = null;
-    let partnerStatusUnsubscribe = null;
+    let pilot = null, currentDomain = 'global', listMode = 'posts', activeChatId = null;
+    let unsubList = null, unsubMsgs = null;
 
-    // --- AUTHENTICATION FLOW ---
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            validatePilotProfile();
-        } else {
-            showView('auth-gate');
-        }
-    });
-
-    async function handleLogin() {
+    /* --- AUTH & IDENTITY LAYER --- */
+    async function initiateAuth() {
         const provider = new firebase.auth.GoogleAuthProvider();
         try {
             await auth.signInWithPopup(provider);
-        } catch (err) {
-            alert("Connection error: " + err.message);
+        } catch (e) {
+            await auth.signInWithRedirect(provider);
         }
     }
 
-    function handleLogout() {
-        setUserStatus('cloaked').then(() => {
-            auth.signOut().then(() => location.reload());
-        });
-    }
-
-    // --- PROFILE MANAGEMENT ---
-    async function validatePilotProfile() {
-        const doc = await db.collection('users').doc(currentUser.uid).get();
-        if (doc.exists && doc.data().name) {
-            showView('app');
-            setUserStatus('online');
-            loadConversationList();
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            const snap = await db.collection('users').doc(user.uid).get();
+            if (snap.exists && snap.data().name) {
+                pilot = snap.data();
+                bootSystem();
+            } else {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('identity-gate').style.display = 'flex';
+                document.getElementById('master-loader').style.display = 'none';
+            }
         } else {
-            toggleIdentityModal(true, false);
+            document.getElementById('auth-gate').style.display = 'flex';
+            document.getElementById('main-ui').style.display = 'none';
+            document.getElementById('master-loader').style.display = 'none';
         }
+    });
+
+    async function finalizeIdentity() {
+        const name = document.getElementById('setup-name').value.trim();
+        const bio = document.getElementById('setup-bio').value.trim();
+        if (name.length < 3) return alert("Callsign too short.");
+        
+        const newPilot = { uid: auth.currentUser.uid, name, bio, rep: 0, status: 'online', joined: firebase.firestore.FieldValue.serverTimestamp() };
+        await db.collection('users').doc(auth.currentUser.uid).set(newPilot);
+        pilot = newPilot;
+        bootSystem();
     }
 
-    function toggleIdentityModal(show, canClose = true) {
-        const modal = document.getElementById('identity-lock');
-        const closeBtn = document.getElementById('close-modal-btn');
-        modal.style.display = show ? 'flex' : 'none';
-        closeBtn.style.display = canClose ? 'block' : 'none';
+    function bootSystem() {
+        document.getElementById('identity-gate').style.display = 'none';
+        document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('main-ui').style.display = 'grid';
+        document.getElementById('master-loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('master-loader').style.display = 'none', 500);
         
-        if (show && canClose) {
-            db.collection('users').doc(currentUser.uid).get().then(doc => {
-                const d = doc.data();
-                document.getElementById('pilot-name').value = d.name || '';
-                document.getElementById('pilot-status').value = d.status || 'online';
-                document.getElementById('pilot-bio').value = d.bio || '';
-            });
-        }
+        syncProfileUI();
+        loadSovereignties();
+        loadBroadcasts();
+        loadNotes();
     }
 
-    async function submitIdentity() {
-        const name = document.getElementById('pilot-name').value.trim();
-        const status = document.getElementById('pilot-status').value;
-        const bio = document.getElementById('pilot-bio').value.trim();
-        
-        if (name.length < 3) return alert("Callsign must be at least 3 characters.");
-        
-        updateProgressBar(30);
-        await db.collection('users').doc(currentUser.uid).set({
-            uid: currentUser.uid,
-            name: name,
-            status: status,
-            bio: bio,
-            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        updateProgressBar(100);
-        setTimeout(() => updateProgressBar(0), 500);
-        validatePilotProfile();
+    /* --- COMMUNITY (REDDIT) SYSTEM --- */
+    async function createSovereignty() {
+        const name = document.getElementById('comm-name').value.trim();
+        const desc = document.getElementById('comm-desc').value.trim();
+        if (!name) return;
+        await db.collection('sovereignties').add({ name, desc, creator: pilot.uid, ts: firebase.firestore.FieldValue.serverTimestamp() });
+        toggleModal('create-comm');
     }
 
-    // --- SEARCH LOGIC ---
-    async function executePilotSearch() {
-        const query = document.getElementById('pilot-search').value.toLowerCase();
-        const container = document.getElementById('search-results');
-        
-        if (!query) { container.style.display = 'none'; return; }
-
-        const snap = await db.collection('users')
-            .where('name', '>=', query)
-            .where('name', '<=', query + '\uf8ff')
-            .limit(5).get();
-            
-        container.innerHTML = '';
-        if (snap.empty) {
-            container.innerHTML = '<div style="padding:15px; opacity:0.5;">No pilots found...</div>';
-        } else {
+    function loadSovereignties() {
+        db.collection('sovereignties').onSnapshot(snap => {
+            const list = document.getElementById('sovereignty-list');
+            list.innerHTML = '';
             snap.forEach(doc => {
                 const d = doc.data();
-                if (d.uid === currentUser.uid) return;
                 const div = document.createElement('div');
-                div.className = 'search-item';
-                div.style = "padding:12px 20px; border-bottom:1px solid #333; cursor:pointer;";
-                div.innerHTML = `
-                    <div style="font-weight:bold;"><span class="dot ${d.status}"></span> ${d.name}</div>
-                    <div style="font-size:0.7rem; opacity:0.6;">${d.bio || 'No mission bio...'}</div>
-                `;
-                div.onclick = () => { establishNeuralLink(d.uid, d.name); container.style.display = 'none'; };
-                container.appendChild(div);
+                div.className = `sector-btn ${currentDomain === doc.id ? 'active' : ''}`;
+                div.innerText = d.name.substring(0,2).toUpperCase();
+                div.title = d.name;
+                div.onclick = () => { currentDomain = doc.id; loadBroadcasts(); syncActiveSector(this); };
+                list.appendChild(div);
             });
-        }
-        container.style.display = 'block';
-    }
-
-    // --- CHAT SYSTEM ---
-    async function establishNeuralLink(targetUid, targetName) {
-        const chatId = currentUser.uid < targetUid ? `${currentUser.uid}_${targetUid}` : `${targetUid}_${currentUser.uid}`;
-        const myDoc = await db.collection('users').doc(currentUser.uid).get();
-        
-        await db.collection('chats').doc(chatId).set({
-            participants: [currentUser.uid, targetUid],
-            names: { [currentUser.uid]: myDoc.data().name, [targetUid]: targetName },
-            lastMsg: "Secure connection established.",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        openChannel(chatId, targetName);
-    }
-
-    function openChannel(id, name) {
-        if (msgUnsubscribe) msgUnsubscribe();
-        if (partnerStatusUnsubscribe) partnerStatusUnsubscribe();
-        
-        activeChatId = id;
-        if (window.innerWidth <= 800) document.getElementById('main-stage').classList.add('active');
-
-        document.getElementById('header-name').innerText = name.toUpperCase();
-        document.getElementById('header-avatar').innerText = name.charAt(0).toUpperCase();
-
-        // Partner Status Listener
-        partnerStatusUnsubscribe = db.collection('users').where('name', '==', name).onSnapshot(s => {
-            if (!s.empty) {
-                const d = s.docs[0].data();
-                document.getElementById('header-status').innerHTML = `<span class="dot ${d.status}"></span> ${d.status.toUpperCase()}`;
-            }
-        });
-
-        // Message Listener
-        msgUnsubscribe = db.collection('chats').doc(id).collection('messages')
-            .orderBy('ts', 'asc').onSnapshot(snap => {
-                const view = document.getElementById('message-viewport');
-                view.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const isMe = d.uid === currentUser.uid;
-                    const time = d.ts ? new Date(d.ts.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...';
-                    
-                    const div = document.createElement('div');
-                    div.className = `msg-bubble ${isMe ? 'msg-sent' : 'msg-received'}`;
-                    div.innerHTML = `
-                        ${d.image ? `<img src="${d.image}" class="msg-image" onclick="window.open('${d.image}')">` : ''}
-                        <div>${d.text || ''}</div>
-                        <div class="msg-info">${time} ${isMe ? '✓✓' : ''}</div>
-                    `;
-                    view.appendChild(div);
-                });
-                view.scrollTop = view.scrollHeight;
-            });
-    }
-
-    async function sendTransmission() {
-        const val = document.getElementById('msg-input').value.trim();
-        if (!val || !activeChatId) return;
-        
-        document.getElementById('msg-input').value = '';
-        const ts = firebase.firestore.FieldValue.serverTimestamp();
-        
-        await db.collection('chats').doc(activeChatId).collection('messages').add({
-            text: val, uid: currentUser.uid, ts: ts
-        });
-
-        await db.collection('chats').doc(activeChatId).update({
-            lastMsg: val, timestamp: ts
         });
     }
 
-    // --- IMAGE SYSTEM ---
-    async function processImageUpload(input) {
-        if (!input.files || !activeChatId) return;
-        const file = input.files[0];
-        const path = `nexus_files/${activeChatId}/${Date.now()}_${file.name}`;
-        const ref = storage.ref().child(path);
-        const task = ref.put(file);
-
-        task.on('state_changed', 
-            s => { updateProgressBar((s.bytesTransferred / s.totalBytes) * 100); },
-            e => { alert("Transfer Interrupted!"); },
-            async () => {
-                const url = await task.snapshot.ref.getDownloadURL();
-                const ts = firebase.firestore.FieldValue.serverTimestamp();
-                await db.collection('chats').doc(activeChatId).collection('messages').add({
-                    image: url, uid: currentUser.uid, ts: ts
-                });
-                await db.collection('chats').doc(activeChatId).update({
-                    lastMsg: "📷 Visual File Received", timestamp: ts
-                });
-                updateProgressBar(0);
-                input.value = '';
-            }
-        );
-    }
-
-    // --- NEBULA FEED ---
-    async function publishToNebula() {
-        const h = document.getElementById('nebula-h').value.trim();
-        const b = document.getElementById('nebula-b').value.trim();
-        if (!h || !b) return alert("Broadcast fields incomplete.");
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        await db.collection('nebula_posts').add({
-            authorId: currentUser.uid,
-            authorName: userDoc.data().name,
-            head: h, body: b,
-            ts: firebase.firestore.FieldValue.serverTimestamp()
+    async function publishBroadcast() {
+        const title = document.getElementById('post-title').value.trim();
+        const body = document.getElementById('post-body').value.trim();
+        if (!title) return;
+        await db.collection('broadcasts').add({
+            title, body, author: pilot.name, authorId: pilot.uid,
+            domain: currentDomain, votes: 0, ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        document.getElementById('nebula-h').value = '';
-        document.getElementById('nebula-b').value = '';
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-body').value = '';
     }
 
-    function loadNebulaFeed() {
-        db.collection('nebula_posts').orderBy('ts', 'desc').onSnapshot(snap => {
-            const feed = document.getElementById('nebula-feed-list');
+    function loadBroadcasts() {
+        db.collection('broadcasts').where('domain', '==', currentDomain).orderBy('ts', 'desc').onSnapshot(snap => {
+            const feed = document.getElementById('broadcast-feed');
             feed.innerHTML = '';
             snap.forEach(doc => {
                 const d = doc.data();
-                const isMe = d.authorId === currentUser.uid;
-                const card = document.createElement('div');
-                card.className = 'nebula-post';
-                card.innerHTML = `
-                    <div class="post-author">PILOT: @${d.authorName}</div>
-                    <div class="post-title">${d.head}</div>
-                    <div class="post-body">${d.body}</div>
-                    <div style="margin-top:15px; display:flex; gap:10px;">
-                        ${isMe ? `<button onclick="deleteBroadcast('${doc.id}')" style="background:var(--danger); color:white; border:none; padding:6px 15px; border-radius:5px; cursor:pointer;">DESTRUCT</button>` 
-                               : `<button onclick="establishNeuralLink('${d.authorId}', '${d.authorName}')" style="background:var(--accent); color:black; border:none; padding:6px 15px; border-radius:5px; cursor:pointer;">CONNECT</button>`}
+                feed.innerHTML += `
+                    <div class="post-card">
+                        <div class="post-votes">
+                            <span style="cursor:pointer" onclick="castVote('${doc.id}', 1)">▲</span>
+                            <span style="font-weight:bold; margin:5px 0;">${d.votes || 0}</span>
+                            <span style="cursor:pointer" onclick="castVote('${doc.id}', -1)">▼</span>
+                        </div>
+                        <div class="post-body">
+                            <div style="font-size:0.7rem; color:var(--text-dim); margin-bottom:5px;">u/${d.author} • Broadcast</div>
+                            <div class="post-title">${d.title}</div>
+                            <div style="opacity:0.8; font-size:0.9rem;">${d.body}</div>
+                        </div>
                     </div>
                 `;
-                feed.appendChild(card);
             });
         });
     }
 
-    async function deleteBroadcast(id) {
-        if (confirm("Confirm broadcast erasure?")) await db.collection('nebula_posts').doc(id).delete();
-    }
+    /* --- MESSAGING (WHATSAPP) SYSTEM --- */
+    function openNeuralLink(chatId, partnerName) {
+        if (unsubMsgs) unsubMsgs();
+        activeChatId = chatId;
+        document.getElementById('reddit-view').style.display = 'none';
+        document.getElementById('messenger-view').style.display = 'flex';
+        document.getElementById('chat-target-name').innerText = partnerName;
+        document.getElementById('chat-avatar').innerText = partnerName[0];
 
-    // --- CONVERSATION LIST ---
-    function loadConversationList() {
-        db.collection('chats').where('participants', 'array-contains', currentUser.uid)
-            .orderBy('timestamp', 'desc').onSnapshot(snap => {
-                const container = document.getElementById('list-container');
-                container.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const otherId = d.participants.find(p => p !== currentUser.uid);
-                    const name = d.names[otherId] || "Pilot";
-                    
-                    const div = document.createElement('div');
-                    div.className = 'chat-row';
-                    div.innerHTML = `
-                        <div class="avatar-circle">${name.charAt(0).toUpperCase()}</div>
-                        <div style="flex:1; overflow:hidden;">
-                            <div style="font-weight:bold; color:var(--accent);">${name}</div>
-                            <div style="font-size:0.75rem; opacity:0.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.lastMsg}</div>
-                        </div>
-                    `;
-                    div.onclick = () => openChannel(doc.id, name);
-                    container.appendChild(div);
-                });
+        unsubMsgs = db.collection('chats').doc(chatId).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
+            const render = document.getElementById('msg-render');
+            render.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const isMe = d.uid === pilot.uid;
+                render.innerHTML += `
+                    <div class="bubble ${isMe ? 'sent' : 'received'}">
+                        ${d.image ? `<img src="${d.image}" style="width:100%; border-radius:8px; margin-bottom:8px;">` : ''}
+                        <div>${d.text}</div>
+                        <div style="font-size:0.6rem; opacity:0.4; text-align:right; margin-top:5px;">${isMe ? 'DELIVERED 🗸🗸' : ''}</div>
+                    </div>
+                `;
             });
+            render.scrollTop = render.scrollHeight;
+        });
     }
 
-    // --- UTILITIES ---
-    function showView(viewId) {
-        document.getElementById('auth-gate').style.display = viewId === 'auth-gate' ? 'flex' : 'none';
-        document.getElementById('app').style.display = viewId === 'app' ? 'flex' : 'none';
+    async function sendDirectMsg() {
+        const input = document.getElementById('chat-input');
+        const text = input.innerText.trim();
+        if (!text || !activeChatId) return;
+        input.innerText = '';
+        const ts = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('chats').doc(activeChatId).collection('messages').add({ text, uid: pilot.uid, ts });
+        await db.collection('chats').doc(activeChatId).update({ lastMsg: text, ts });
     }
 
-    function navigate(view, btn) {
-        document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+    /* --- SEARCH & SOCIAL LAYER --- */
+    async function executeSearch() {
+        const q = document.getElementById('orbital-search').value.toLowerCase();
+        const res = document.getElementById('search-results');
+        if (!q) { res.style.display = 'none'; return; }
+        
+        const snap = await db.collection('users').where('name', '>=', q).where('name', '<=', q + '\uf8ff').limit(5).get();
+        res.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data(); if(d.uid === pilot.uid) return;
+            const div = document.createElement('div');
+            div.style = "padding:12px; border-bottom:1px solid #222; cursor:pointer;";
+            div.innerText = d.name;
+            div.onclick = () => createChat(d.uid, d.name);
+            res.appendChild(div);
+        });
+        res.style.display = 'block';
+    }
+
+    async function createChat(tId, tName) {
+        const cId = pilot.uid < tId ? `${pilot.uid}_${tId}` : `${tId}_${pilot.uid}`;
+        await db.collection('chats').doc(cId).set({
+            participants: [pilot.uid, tId],
+            names: {[pilot.uid]: pilot.name, [tId]: tName},
+            lastMsg: 'Encrypted link established',
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true});
+        document.getElementById('search-results').style.display = 'none';
+        setListMode('chats');
+        openNeuralLink(cId, tName);
+    }
+
+    /* --- NOTE ARCHIVE SYSTEM --- */
+    async function createNewNote() {
+        const content = prompt("Enter data to archive:");
+        if (!content) return;
+        await db.collection('users').doc(pilot.uid).collection('notes').add({
+            content, ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    function loadNotes() {
+        db.collection('users').doc(pilot.uid).collection('notes').orderBy('ts', 'desc').onSnapshot(snap => {
+            const list = document.getElementById('note-list');
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                list.innerHTML += `<div style="background:#111; padding:10px; border-radius:8px; margin-bottom:10px; font-size:0.8rem; border-left:2px solid var(--secondary);">
+                    ${d.content}
+                </div>`;
+            });
+        });
+    }
+
+    /* --- UI UTILITIES --- */
+    function syncProfileUI() {
+        document.getElementById('my-name').innerText = pilot.name;
+        document.getElementById('my-avatar').innerText = pilot.name[0];
+        document.getElementById('my-rep').innerText = `REP: ${pilot.rep || 0} CR`;
+    }
+
+    function switchMainTab(domain, btn) {
+        currentDomain = domain;
+        document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('chat-view').style.display = view === 'chats' ? 'flex' : 'none';
-        document.getElementById('nebula-view').style.display = view === 'nebula' ? 'block' : 'none';
-        if (view === 'nebula') loadNebulaFeed();
+        document.getElementById('messenger-view').style.display = 'none';
+        document.getElementById('reddit-view').style.display = 'flex';
+        loadBroadcasts();
     }
 
-    function closeChatMobile() { document.getElementById('main-stage').classList.remove('active'); }
-    function updateProgressBar(w) { document.getElementById('progress-bar').style.width = w + '%'; }
-    async function setUserStatus(s) { if (currentUser) await db.collection('users').doc(currentUser.uid).set({ status: s }, { merge: true }); }
-
-    // --- STAR ENGINE ---
-    const canvas = document.getElementById('star-canvas'), ctx = canvas.getContext('2d');
-    let stars = [];
-    function initStars() { 
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
-        stars = Array.from({length: 200}, () => ({ 
-            x: Math.random()*canvas.width, y: Math.random()*canvas.height, 
-            s: Math.random()*1.5, v: Math.random()*0.1, o: Math.random() 
-        })); 
+    function setListMode(mode) {
+        listMode = mode;
+        document.querySelectorAll('.list-tab').forEach(t => t.style.opacity = '0.5');
+        document.getElementById(`tab-${mode}`).style.opacity = '1';
+        if (mode === 'chats') loadChatThreads(); else loadBroadcasts();
     }
-    function renderStars() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        stars.forEach(s => {
-            s.x += s.v; if (s.x > canvas.width) s.x = 0;
-            ctx.fillStyle = `rgba(255, 255, 255, ${s.o})`;
-            ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
+
+    function loadChatThreads() {
+        db.collection('chats').where('participants', 'array-contains', pilot.uid).orderBy('ts', 'desc').onSnapshot(snap => {
+            const list = document.getElementById('master-list');
+            if (listMode !== 'chats') return;
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const oId = d.participants.find(p => p !== pilot.uid);
+                list.innerHTML += `<div class="list-item" onclick="openNeuralLink('${doc.id}', '${d.names[oId]}')">
+                    <div class="sector-btn" style="width:40px; height:40px; background:#222;">${d.names[oId][0]}</div>
+                    <div style="flex:1">
+                        <div style="font-weight:bold;">${d.names[oId]}</div>
+                        <div style="font-size:0.7rem; opacity:0.4;">${d.lastMsg}</div>
+                    </div>
+                </div>`;
+            });
         });
-        requestAnimationFrame(renderStars);
     }
-    window.onresize = initStars; initStars(); renderStars();
-</script>
 
+    async function castVote(id, val) {
+        const ref = db.collection('broadcasts').doc(id);
+        await db.runTransaction(async (t) => {
+            const doc = await t.get(ref);
+            const newVotes = (doc.data().votes || 0) + val;
+            t.update(ref, { votes: newVotes });
+        });
+    }
+
+    function toggleModal(id) {
+        const m = document.getElementById(id);
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function handleLogout() { auth.signOut().then(() => location.reload()); }
+
+    /* --- STARFIELD ENGINE (CORE) --- */
+    const canvas = document.getElementById('galaxy-engine'), ctx = canvas.getContext('2d');
+    let stars = [];
+    function init() { 
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
+        stars = Array.from({length: 300}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, v: Math.random()*0.15 })); 
+    }
+    function draw() {
+        ctx.fillStyle = '#020205'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#fff';
+        stars.forEach(s => { 
+            s.x += s.v; if(s.x > canvas.width) s.x = 0;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill(); 
+        });
+        requestAnimationFrame(draw);
+    }
+    window.onresize = init; init(); draw();
+</script>
 </body>
 </html>
+
 
 
 
