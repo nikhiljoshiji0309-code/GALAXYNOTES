@@ -1,376 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cosmic Nexus | Galactic Messaging</title>
+// 1. Updated: Pulls actual users from your 'users' collection
+async function openGroupModal() {
+    toggleModal(true);
+    const list = document.getElementById('contact-list');
+    list.innerHTML = '<div style="padding:10px; color:var(--accent); font-size:0.8rem;">SCANNING NEBULA FOR PILOTS...</div>';
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-    <style>
-        :root { 
-            --accent: #00d2ff; --bg: #03030b; --panel: rgba(10, 10, 18, 0.85); --text: #f0f0f0; 
-            --glass: rgba(255, 255, 255, 0.05); --border: rgba(0, 210, 255, 0.2);
-            --danger: #ff4b2b;
-        }
-
-        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+    try {
+        const usersSnap = await db.collection('users').get();
+        list.innerHTML = ''; // Clear scanner text
         
-        /* Starry Background Engine */
-        #canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: #000; }
-
-        .nexus-wrapper { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; background: transparent; }
-        
-        /* Sidebar Navigation */
-        .sidebar { width: 350px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; backdrop-filter: blur(10px); }
-        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.3); }
-        .nav-icons { display: flex; justify-content: space-around; padding: 15px 0; border-bottom: 1px solid var(--border); }
-        .nav-btn { cursor: pointer; opacity: 0.6; transition: 0.3s; font-size: 0.7rem; text-align: center; letter-spacing: 1px; color: #fff; }
-        .nav-btn.active { opacity: 1; color: var(--accent); font-weight: bold; }
-
-        /* Chat & Content Lists */
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .chat-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 1px solid var(--accent); }
-        .chat-info h4 { margin: 0; font-size: 0.95rem; color: var(--accent); }
-        .chat-info p { margin: 5px 0 0; font-size: 0.8rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* Main Display Area */
-        .main-content { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); position: relative; backdrop-filter: blur(5px); }
-        .view-section { display: none; padding: 30px; height: 100%; overflow-y: auto; }
-        .view-section.active { display: block; }
-        
-        .chat-header { padding: 15px 25px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
-        .message-area { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; }
-        
-        /* Bubbles */
-        .bubble { padding: 12px 18px; border-radius: 18px; max-width: 80%; font-size: 0.9rem; }
-        .sent { align-self: flex-end; background: var(--accent); color: #000; border-bottom-right-radius: 2px; }
-        .received { align-self: flex-start; background: #1e1e2a; border-bottom-left-radius: 2px; border: 1px solid var(--border); }
-
-        /* Avatar Selection */
-        .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin: 20px 0; }
-        .avatar-opt { width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer; border: 2px solid transparent; background: #111; }
-        .avatar-opt.selected { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
-
-        /* Inputs & Buttons */
-        input, textarea { width: 100%; background: #151520; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin: 10px 0; outline: none; }
-        button { background: var(--accent); border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: var(--danger); color: white; margin-top: 20px; width: 100%; }
-
-        /* MOBILE FIXES */
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; position: absolute; inset: 0; z-index: 50; }
-            .sidebar.hidden { display: none; }
-            .main-content { width: 100%; height: 100%; z-index: 60; display: none; }
-            .main-content.mobile-active { display: flex; }
-            .view-section { padding: 20px; }
+        if (usersSnap.empty) {
+            list.innerHTML = '<div style="padding:10px; opacity:0.5;">No other pilots found in this sector.</div>';
+            return;
         }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
-        .modal-content { background: #0a0a12; border: 1px solid var(--accent); padding: 30px; border-radius: 15px; width: 90%; }
-    </style>
-</head>
-<body>
-
-<canvas id="canvas"></canvas>
-
-<div id="auth-gate" style="position:fixed; inset:0; z-index:9999; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <h1 style="letter-spacing:10px; color:var(--accent);">COSMIC NEXUS</h1>
-    <button onclick="login()">ESTABLISH UPLINK</button>
-</div>
-
-<div class="nexus-wrapper" id="app">
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <img id="my-pfp" src="" style="width:45px; height:45px; border-radius:50%; border:2px solid var(--accent); object-fit: cover;">
-                <h3 id="my-name" style="margin:0;">Pilot</h3>
-            </div>
-        </div>
-        <div class="nav-icons">
-            <div class="nav-btn active" onclick="showTab('chats', this)">CHATS</div>
-            <div class="nav-btn" onclick="showTab('discover', this)">NEBULA</div>
-            <div class="nav-btn" onclick="showTab('transmit', this)">BROADCAST</div>
-            <div class="nav-btn" onclick="showTab('profile', this)">IDENTITY</div>
-        </div>
-        <div id="tab-chats-list" class="chat-list">
-            <div style="padding:15px;"><button onclick="openGroupModal()" style="width:100%;">+ NEW GROUP</button></div>
-            <div id="conversation-items"></div>
-        </div>
-    </aside>
-
-    <main class="main-content" id="main-content">
-        <header class="chat-header" id="dynamic-header">
-            <button onclick="closeMainView()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 10px;">&larr; BACK</button>
-            <img id="active-icon" src="" style="width:40px; height:40px; border-radius:50%; display:none; object-fit:cover;">
-            <div id="active-title" style="font-weight:bold;">Nexus Control</div>
-        </header>
-
-        <section id="tab-profile" class="view-section">
-            <h2>Identity Config</h2>
-            <div class="avatar-grid" id="avatar-picker"></div>
-            <input id="pfp-url" placeholder="Custom URL">
-            <input id="pilot-callsign" placeholder="Name">
-            <button onclick="saveProfile()" style="width:100%;">SYNC IDENTITY</button>
-            <button onclick="logout()" class="btn-danger">TERMINATE SESSION</button>
-        </section>
-
-        <section id="tab-discover" class="view-section">
-            <h2>Nebula Archive</h2>
-            <div id="notes-feed"></div>
-        </section>
-
-        <section id="tab-transmit" class="view-section">
-            <h2>New Transmission</h2>
-            <input id="note-head" placeholder="Heading">
-            <textarea id="note-body" rows="8" placeholder="Data..."></textarea>
-            <button onclick="postNote()" style="width:100%;">BROADCAST</button>
-        </section>
-
-        <div id="active-chat-view" style="display:none; flex-direction:column; height:100%;">
-            <div class="message-area" id="message-area"></div>
-            <div class="input-box" style="padding:20px; display:flex; gap:10px; background:var(--panel);">
-                <input id="msg-input" placeholder="Message..." style="margin:0;">
-                <button onclick="sendMsg()">SEND</button>
-            </div>
-        </div>
-    </main>
-</div>
-
-<div id="group-modal" class="modal">
-    <div class="modal-content">
-        <h3>New Frequency</h3>
-        <input id="group-name" placeholder="Name">
-        <div id="contact-list" style="max-height: 200px; overflow-y: auto; margin:15px 0;"></div>
-        <button onclick="createGroup()" style="width:100%;">LAUNCH</button>
-        <button onclick="toggleModal(false)" style="width:100%; background:#333; margin-top:5px;">CANCEL</button>
-    </div>
-</div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
-        authDomain: "cosmic-notes-f7648.firebaseapp.com",
-        projectId: "cosmic-notes-f7648",
-        storageBucket: "cosmic-notes-f7648.firebasestorage.app",
-        messagingSenderId: "70656136344",
-        appId: "1:70656136344:web:640193b83f63cac569aced"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    let user = null;
-    let currentChatId = null;
-
-    const avatars = [
-        'https://cdn-icons-png.flaticon.com/512/2026/2026521.png','https://cdn-icons-png.flaticon.com/512/2534/2534571.png',
-        'https://cdn-icons-png.flaticon.com/512/9440/9440938.png','https://cdn-icons-png.flaticon.com/512/2530/2530854.png',
-        'https://cdn-icons-png.flaticon.com/512/1146/1146399.png','https://cdn-icons-png.flaticon.com/512/1210/1210065.png',
-        'https://cdn-icons-png.flaticon.com/512/3212/3212581.png','https://cdn-icons-png.flaticon.com/512/3212/3212567.png',
-        'https://cdn-icons-png.flaticon.com/512/944/944255.png','https://cdn-icons-png.flaticon.com/512/2534/2534563.png',
-        'https://cdn-icons-png.flaticon.com/512/2534/2534577.png','https://cdn-icons-png.flaticon.com/512/3655/3655610.png'
-    ];
-
-    auth.onAuthStateChanged(u => {
-        if (u) {
-            user = u;
-            document.getElementById('auth-gate').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            loadIdentity();
-            loadChatList();
-            loadNotes();
-            renderAvatars();
-        } else {
-            document.getElementById('auth-gate').style.display = 'flex';
-            document.getElementById('app').style.display = 'none';
-        }
-    });
-
-    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-    function logout() { auth.signOut(); }
-
-    // Navigation Fixed for Mobile
-    function showTab(t, btn) {
-        // Clear all states
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('active-chat-view').style.display = 'none';
-        
-        // Activate Tab
-        if(t !== 'chats') {
-            document.getElementById('tab-' + t).classList.add('active');
-            document.getElementById('active-title').innerText = t.toUpperCase();
-            document.getElementById('active-icon').style.display = 'none';
-        } else {
-            document.getElementById('active-title').innerText = "SELECT FREQUENCY";
-        }
-
-        if(window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('main-content').classList.add('mobile-active');
-        }
-
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function closeMainView() {
-        document.getElementById('sidebar').classList.remove('hidden');
-        document.getElementById('main-content').classList.remove('mobile-active');
-    }
-
-    // Chat Logic
-    function loadChatList() {
-        db.collection('chats').where('participants', 'array-contains', user.uid).onSnapshot(snap => {
-            const container = document.getElementById('conversation-items');
-            container.innerHTML = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                const div = document.createElement('div');
-                div.className = 'chat-item';
-                div.onclick = () => openChat(doc.id, d.name, d.icon || avatars[0]);
-                div.innerHTML = `<img src="${d.icon || avatars[0]}"><div class="chat-info"><h4>${d.name}</h4><p>${d.lastMsg || 'Establishing link...'}</p></div>`;
-                container.appendChild(div);
-            });
-        });
-    }
-
-    function openChat(id, name, icon) {
-        currentChatId = id;
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('active-chat-view').style.display = 'flex';
-        document.getElementById('active-title').innerText = name;
-        document.getElementById('active-icon').src = icon;
-        document.getElementById('active-icon').style.display = 'block';
-
-        if(window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('main-content').classList.add('mobile-active');
-        }
-
-        db.collection('chats').doc(id).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
-            const area = document.getElementById('message-area');
-            area.innerHTML = '';
-            snap.forEach(m => {
-                const data = m.data();
-                const isMe = data.uid === user.uid;
-                area.innerHTML += `<div class="bubble ${isMe ? 'sent' : 'received'}">${data.text}</div>`;
-            });
-            area.scrollTop = area.scrollHeight;
-        });
-    }
-
-    async function sendMsg() {
-        const text = document.getElementById('msg-input').value.trim();
-        if(!text) return;
-        document.getElementById('msg-input').value = '';
-        await db.collection('chats').doc(currentChatId).collection('messages').add({
-            text, uid: user.uid, ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        await db.collection('chats').doc(currentChatId).update({ lastMsg: text });
-    }
-
-    // Profile & Avatars
-    function renderAvatars() {
-        const grid = document.getElementById('avatar-picker');
-        grid.innerHTML = '';
-        avatars.forEach(url => {
-            const img = document.createElement('img');
-            img.src = url; img.className = 'avatar-opt';
-            img.onclick = () => {
-                document.querySelectorAll('.avatar-opt').forEach(i => i.classList.remove('selected'));
-                img.classList.add('selected');
-                document.getElementById('pfp-url').value = url;
+        usersSnap.forEach(doc => {
+            // Don't show yourself in the "Add to group" list
+            if(doc.id === user.uid) return;
+            
+            const pilot = doc.data();
+            const pilotRow = document.createElement('div');
+            pilotRow.style.cssText = "display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;";
+            
+            // Make the whole row clickable for better mobile UX
+            pilotRow.onclick = (e) => {
+                const cb = pilotRow.querySelector('input');
+                if(e.target !== cb) cb.checked = !cb.checked;
             };
-            grid.appendChild(img);
+
+            pilotRow.innerHTML = `
+                <input type="checkbox" class="user-sel" value="${doc.id}" style="width:20px; height:20px;">
+                <img src="${pilot.pfp || avatars[0]}" style="width:35px; height:35px; border-radius:50%; border:1px solid #333;">
+                <span style="font-size:0.9rem;">${pilot.name || 'Unknown Pilot'}</span>
+            `;
+            list.appendChild(pilotRow);
         });
+    } catch (err) {
+        console.error("Discovery Error:", err);
+        list.innerHTML = '<div style="padding:10px; color:red;">Link Error: Could not reach user directory.</div>';
     }
+}
 
-    async function saveProfile() {
-        await db.collection('users').doc(user.uid).update({
-            name: document.getElementById('pilot-callsign').value,
-            pfp: document.getElementById('pfp-url').value
+// 2. Updated: Correctly launches the group with a participant array
+async function createGroup() {
+    const name = document.getElementById('group-name').value.trim();
+    const selectedBoxes = document.querySelectorAll('.user-sel:checked');
+    const selectedIDs = Array.from(selectedBoxes).map(cb => cb.value);
+
+    if(!name) return alert("Please name this frequency (Group Name).");
+    if(selectedIDs.length === 0) return alert("Select at least one pilot to join the frequency.");
+
+    // Ensure YOU are included in the group you created
+    selectedIDs.push(user.uid);
+
+    try {
+        const newGroup = await db.collection('chats').add({
+            name: name,
+            participants: selectedIDs,
+            icon: avatars[1], // Default group icon
+            lastMsg: 'Frequency established by ' + (document.getElementById('my-name').innerText),
+            ts: firebase.firestore.FieldValue.serverTimestamp(),
+            createdBy: user.uid
         });
-        alert("Synced!");
+
+        // UI Reset
+        document.getElementById('group-name').value = '';
+        toggleModal(false);
+        alert(`Frequency ${name} Launched!`);
+        
+        // Automatically open the new chat
+        openChat(newGroup.id, name, avatars[1]);
+
+    } catch (err) {
+        console.error("Launch Error:", err);
+        alert("Failed to establish frequency.");
     }
+}
 
-    function loadIdentity() {
-        db.collection('users').doc(user.uid).onSnapshot(doc => {
-            if(!doc.exists) return;
-            const d = doc.data();
-            document.getElementById('my-pfp').src = d.pfp;
-            document.getElementById('my-name').innerText = d.name;
-        });
-    }
-
-    // Notes
-    function loadNotes() {
-        db.collection('notes').orderBy('ts', 'desc').onSnapshot(snap => {
-            const box = document.getElementById('notes-feed'); box.innerHTML = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                box.innerHTML += `
-                    <div style="background:var(--glass); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; padding:15px;">
-                        <h4 style="margin:0; color:var(--accent);">${d.head}</h4>
-                        <p style="font-size:0.9rem; opacity:0.8;">${d.body}</p>
-                    </div>`;
-            });
-        });
-    }
-
-    async function postNote() {
-        const head = document.getElementById('note-head').value;
-        const body = document.getElementById('note-body').value;
-        const snap = await db.collection('notes').where('head', '==', head).get();
-        if(!snap.empty) return alert("Heading must be unique!");
-        await db.collection('notes').add({ head, body, ts: firebase.firestore.FieldValue.serverTimestamp() });
-        alert("Broadcasted.");
-    }
-
-    // STARRY BACKGROUND ENGINE
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-
-    function initStars() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        stars = Array.from({length: 150}, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 1.5,
-            twinkle: Math.random() * 0.05
-        }));
-    }
-
-    function animate() {
-        ctx.fillStyle = '#03030b';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'white';
-        stars.forEach(s => {
-            s.x += 0.1;
-            if(s.x > canvas.width) s.x = 0;
-            ctx.globalAlpha = 0.5 + Math.abs(Math.sin(Date.now() * 0.001 + s.twinkle * 100));
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        requestAnimationFrame(animate);
-    }
-
-    window.onresize = initStars;
-    initStars();
-    animate();
-
-    function toggleModal(s) { document.getElementById('group-modal').style.display = s ? 'flex' : 'none'; }
-    function openGroupModal() { toggleModal(true); }
-</script>
-</body>
-</html>
 
 
