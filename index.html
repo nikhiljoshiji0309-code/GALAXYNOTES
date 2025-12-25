@@ -3,163 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cosmic Social - Galactic U</title>
+    <title>Cosmic Nexus | Galactic Messaging</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --accent: #00d2ff; --bg: #000005; --panel: rgba(10, 10, 15, 0.98); --text: #e0e0e0; --glass: rgba(255, 255, 255, 0.07); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); }
-        
-        #canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
-        
-        /* Layout */
-        .app-container { position: relative; z-index: 10; display: none; height: 100vh; width: 100vw; display: flex; }
-        .sidebar { width: 280px; background: var(--panel); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; pointer-events: auto; }
-        .main-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(0,0,0,0.4); }
+        :root { 
+            --accent: #00d2ff; --bg: #03030b; --panel: #0a0a12; --text: #f0f0f0; 
+            --glass: rgba(255, 255, 255, 0.05); --border: rgba(0, 210, 255, 0.2);
+        }
 
-        /* Navigation */
-        .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; font-weight: 500; font-size: 0.9rem; letter-spacing: 1px; }
-        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); border-right: 3px solid var(--accent); }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+        #canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-        /* Content Areas */
-        .view-section { display: none; padding: 30px; height: 100%; overflow-y: auto; box-sizing: border-box; }
-        .view-section.active { display: block; }
-
-        /* UI Elements */
-        .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
-        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 15px; transition: 0.3s; }
-        .card:hover { border-color: var(--accent); background: rgba(0, 210, 255, 0.03); }
+        /* Main Layout */
+        .nexus-wrapper { position: relative; z-index: 10; display: flex; height: 100vh; width: 100vw; display: none; }
         
-        input, select, textarea { width: 100%; background: #0a0a0f; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-top: 5px; outline: none; }
+        /* Sidebar (Conversation List) */
+        .sidebar { width: 350px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+        .nav-icons { display: flex; justify-content: space-around; padding: 15px 0; border-bottom: 1px solid var(--border); }
+        .nav-btn { cursor: pointer; opacity: 0.6; transition: 0.3s; font-size: 0.8rem; text-align: center; }
+        .nav-btn.active { opacity: 1; color: var(--accent); }
+
+        /* WhatsApp Style List Items */
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
+        .chat-item:hover { background: var(--glass); }
+        .chat-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 1px solid var(--accent); }
+        .chat-info { flex: 1; overflow: hidden; }
+        .chat-info h4 { margin: 0; font-size: 1rem; color: var(--accent); }
+        .chat-info p { margin: 5px 0 0; font-size: 0.8rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Chat View */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.6); position: relative; }
+        .chat-header { padding: 15px 25px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
+        .message-area { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* Cosmic Bubbles */
+        .bubble { padding: 12px 18px; border-radius: 18px; max-width: 70%; line-height: 1.4; position: relative; font-size: 0.95rem; }
+        .sent { align-self: flex-end; background: var(--accent); color: #000; border-bottom-right-radius: 2px; box-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
+        .received { align-self: flex-start; background: #1e1e2a; border-bottom-left-radius: 2px; border: 1px solid var(--border); }
+        .sender-name { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; opacity: 0.7; }
+
+        /* Note Feed (Accordion) */
+        .note-card { background: var(--glass); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .note-head { padding: 20px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; }
+        .note-body { max-height: 0; padding: 0 20px; transition: 0.4s; overflow: hidden; color: #aaa; border-top: 0 solid transparent; }
+        .note-card.open .note-body { max-height: 1000px; padding: 20px; border-top: 1px solid var(--border); }
+
+        /* Profile & Icons */
+        .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 10px; margin: 15px 0; }
+        .avatar-opt { width: 100%; aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+        .avatar-opt.selected { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        /* Input Controls */
+        .input-box { padding: 20px; background: var(--panel); display: flex; gap: 10px; align-items: center; }
+        input, textarea { flex: 1; background: #1a1a25; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; outline: none; }
         input:focus { border-color: var(--accent); }
-        button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: #000; box-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
-        .btn-ghost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        button { background: var(--accent); border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Galactic U (Profile) */
-        .profile-header { display: flex; align-items: center; gap: 30px; margin-bottom: 30px; }
-        .u-avatar { width: 120px; height: 120px; border-radius: 30px; border: 3px solid var(--accent); object-fit: cover; box-shadow: 0 0 30px rgba(0, 210, 255, 0.4); }
+        /* Mobile View */
+        @media (max-width: 768px) {
+            .nexus-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; height: 100%; }
+            .sidebar.hidden { display: none; }
+            .main-content { width: 100%; height: 100%; position: absolute; left: 0; top: 0; z-index: 30; display: none; }
+            .main-content.active { display: flex; }
+        }
 
-        /* Cosmic Chat */
-        .chat-ui { display: flex; height: 500px; background: rgba(0,0,0,0.6); border-radius: 15px; border: 1px solid #222; overflow: hidden; }
-        .chat-list { width: 220px; border-right: 1px solid #222; overflow-y: auto; background: rgba(255,255,255,0.02); }
-        .chat-main { flex: 1; display: flex; flex-direction: column; }
-        .freq-item { padding: 15px; border-bottom: 1px solid #111; cursor: pointer; font-size: 0.85rem; }
-        .freq-item:hover { background: rgba(255,255,255,0.05); }
-        .freq-item.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
-        .msg-bubble { margin: 8px 15px; padding: 12px 16px; border-radius: 15px; max-width: 70%; font-size: 0.9rem; }
-        .me { align-self: flex-end; background: var(--accent); color: #000; }
-        .them { align-self: flex-start; background: #222; color: #fff; }
-
-        #auth-overlay { position: fixed; z-index: 5000; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; }
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--panel); border: 1px solid var(--accent); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; }
     </style>
 </head>
 <body>
 
 <canvas id="canvas"></canvas>
 
-<div id="auth-overlay">
-    <div>
-        <h1 style="letter-spacing:15px; color:var(--accent); font-size: 3rem; margin: 0;">COSMIC</h1>
-        <p style="color: #666; margin-bottom: 40px; letter-spacing: 4px;">NEURAL NETWORK</p>
-        <button class="btn-primary" onclick="login()" style="padding: 18px 50px; border-radius: 50px;">INITIALIZE SESSION</button>
+<div id="auth-gate" style="position:fixed; inset:0; z-index:9999; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <h1 style="letter-spacing:10px; color:var(--accent);">COSMIC NEXUS</h1>
+    <button onclick="initApp()" style="padding:15px 40px; font-size:1rem;">ESTABLISH UPLINK</button>
+</div>
+
+<div id="group-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-top:0;">New Group Frequency</h2>
+        <input id="group-name" placeholder="Group Name">
+        <p style="font-size:0.8rem; margin:15px 0 5px; color:var(--accent);">SELECT CONTACTS:</p>
+        <div id="contact-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="createGroup()" style="flex:1;">CREATE</button>
+            <button onclick="closeModal()" style="flex:1; background:#333; color:#fff;">CANCEL</button>
+        </div>
     </div>
 </div>
 
-<div class="app-container" id="app-ui">
-    <div class="sidebar">
-        <div style="padding: 40px 20px; text-align: center;">
-            <img id="user-pfp" src="" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;">
-            <h3 id="display-name" style="margin: 15px 0 0; font-weight: 300;">...</h3>
+<div class="nexus-wrapper" id="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <img id="my-pfp" src="" style="width:40px; height:40px; border-radius:50%; border:1px solid var(--accent);">
+                <h3 id="my-name" style="margin:0; font-size:1.1rem;">Pilot</h3>
+            </div>
         </div>
-        <div class="nav-item active" onclick="switchView('discover')">🔭 DISCOVER</div>
-        <div class="nav-item" onclick="switchView('new-note')">📝 NEW NOTE</div>
-        <div class="nav-item" onclick="switchView('chats')">💬 COSMIC CHAT</div>
-        <div class="nav-item" onclick="switchView('profile')">👤 GALACTIC U</div>
-        <div class="nav-item" onclick="switchView('my-notes')">📁 ARCHIVES</div>
-    </div>
+        <div class="nav-icons">
+            <div class="nav-btn active" onclick="showTab('chats')">CHATS</div>
+            <div class="nav-btn" onclick="showTab('discover')">DISCOVER</div>
+            <div class="nav-btn" onclick="showTab('transmit')">TRANSMIT</div>
+            <div class="nav-btn" onclick="showTab('profile')">PROFILE</div>
+        </div>
+        <div id="tab-chats" class="chat-list">
+            <div style="padding:15px;"><button onclick="openModal()" style="width:100%;">+ NEW GROUP</button></div>
+            <div id="conversation-items"></div>
+        </div>
+    </aside>
 
-    <div class="main-view">
-        <section id="view-discover" class="view-section active">
-            <h2 style="letter-spacing: 2px;">Global Transmissions</h2>
-            <div id="discover-feed"></div>
+    <main class="main-content" id="main-content">
+        <section id="tab-discover" style="display:none; padding:30px; overflow-y:auto; height:100%;">
+            <h2 style="color:var(--accent);">Nebula Transmissions</h2>
+            <div id="notes-feed"></div>
         </section>
 
-        <section id="view-chats" class="view-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <h2 style="margin:0;">Frequencies</h2>
-                <button class="btn-ghost" onclick="createGroup()">+ NEW GROUP</button>
-            </div>
-            <div class="chat-ui">
-                <div class="chat-list" id="chat-sidebar-list"></div>
-                <div class="chat-main">
-                    <div id="chat-header" style="padding:15px; background: rgba(0,0,0,0.3); border-bottom:1px solid #222; font-weight: bold; color:var(--accent);">Select Signal</div>
-                    <div id="chat-messages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding-top: 15px;"></div>
-                    <div style="padding:15px; background:rgba(0,0,0,0.4); display:flex; gap:10px;">
-                        <input id="msg-input" placeholder="Type transmission..." style="margin:0;">
-                        <button class="btn-primary" onclick="sendMessage()">SEND</button>
-                    </div>
+        <section id="tab-transmit" style="display:none; padding:30px;">
+            <h2>New Broadcast</h2>
+            <input id="note-head" placeholder="Note Heading (Unique)">
+            <textarea id="note-body" rows="6" placeholder="Transmission data..." style="margin:15px 0; width:100%;"></textarea>
+            <button onclick="postNote()" style="width:100%;">BROADCAST TO NEBULA</button>
+        </section>
+
+        <section id="tab-profile" style="display:none; padding:30px;">
+            <h2>Pilot Identity</h2>
+            <div class="avatar-grid" id="avatar-picker"></div>
+            <input id="pfp-url" placeholder="Custom PFP URL">
+            <input id="pilot-callsign" placeholder="Callsign Name" style="margin:15px 0; width:100%;">
+            <button onclick="saveProfile()" style="width:100%;">SYNC DATA</button>
+        </section>
+
+        <div id="active-chat-view" style="display:flex; flex-direction:column; height:100%;">
+            <header class="chat-header">
+                <button class="mobile-only" onclick="backToSidebar()" style="background:none; color:var(--accent); border:1px solid var(--accent); padding:5px 10px;">&larr;</button>
+                <img id="chat-icon" src="" style="width:40px; height:40px; border-radius:50%; display:none;">
+                <div>
+                    <div id="chat-title" style="font-weight:bold; font-size:1.1rem;">Select a frequency</div>
+                    <div id="chat-status" style="font-size:0.7rem; color:var(--accent); opacity:0.7;">Ready to Link</div>
                 </div>
+            </header>
+            <div class="message-area" id="message-area"></div>
+            <div class="input-box" id="chat-controls" style="display:none;">
+                <input id="msg-input" placeholder="Enter transmission...">
+                <button onclick="sendMsg()">SEND</button>
             </div>
-        </section>
-
-        <section id="view-profile" class="view-section">
-            <h2 style="margin-bottom:20px;">Identity Hub</h2>
-            <div class="glass-card">
-                <div class="profile-header">
-                    <img id="u-display-img" class="u-avatar" src="">
-                    <div>
-                        <h1 id="u-display-name" style="margin:0; font-size: 2rem;">Commander</h1>
-                        <p id="u-display-gender" style="color:var(--accent); letter-spacing: 2px; font-size: 0.8rem; margin: 5px 0;"></p>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div>
-                        <label style="font-size: 0.7rem; color: #888;">COSMIC NAME</label>
-                        <input id="edit-name" type="text">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.7rem; color: #888;">GENDER SIGNATURE</label>
-                        <select id="edit-gender">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div style="grid-column: span 2;">
-                        <label style="font-size: 0.7rem; color: #888;">AVATAR TRANSPONDER URL</label>
-                        <input id="edit-pfp" type="text">
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="updateProfile()" style="margin-top: 30px; width:100%; padding: 15px;">SYNC IDENTITY</button>
-            </div>
-        </section>
-
-        <section id="view-new-note" class="view-section">
-            <h2>Initialize Note</h2>
-            <div class="glass-card">
-                <textarea id="note-body" rows="8" placeholder="Log your thoughts..."></textarea>
-                <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <select id="note-privacy" style="width: 200px; margin:0;">
-                        <option value="public">🌐 PUBLIC</option>
-                        <option value="private">🔒 PRIVATE</option>
-                    </select>
-                    <button class="btn-primary" onclick="saveNote()">PUBLISH</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-my-notes" class="view-section">
-            <h2>Personal Logs</h2>
-            <div id="personal-feed"></div>
-        </section>
-    </div>
+        </div>
+    </main>
 </div>
 
 <script>
+    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -170,219 +173,231 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    let currentUser = null;
-    let activeChatId = null;
+    let user = null;
+    let currentChatId = null;
+    const inbuiltPFPs = [
+        'https://cdn-icons-png.flaticon.com/512/2026/2026521.png',
+        'https://cdn-icons-png.flaticon.com/512/2534/2534571.png',
+        'https://cdn-icons-png.flaticon.com/512/9440/9440938.png',
+        'https://cdn-icons-png.flaticon.com/512/2530/2530854.png',
+        'https://cdn-icons-png.flaticon.com/512/1146/1146399.png',
+        'https://cdn-icons-png.flaticon.com/512/1210/1210065.png'
+    ];
 
-    function login() {
+    async function initApp() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then(async (res) => {
-            currentUser = res.user;
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('app-ui').style.display = 'flex';
-            
-            const userDoc = await db.collection('users').doc(currentUser.uid).get();
-            if (!userDoc.exists) {
-                await db.collection('users').doc(currentUser.uid).set({
-                    name: currentUser.displayName,
-                    photo: currentUser.photoURL,
-                    gender: 'Other', status: 'online'
-                });
-            }
-            loadProfile();
-            loadDiscover();
-            loadChatSidebar();
-        });
+        const res = await auth.signInWithPopup(provider);
+        user = res.user;
+
+        const uRef = db.collection('users').doc(user.uid);
+        const doc = await uRef.get();
+        if(!doc.exists) await uRef.set({ name: user.displayName || 'Pilot', pfp: inbuiltPFPs[0] });
+
+        document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        
+        loadIdentity();
+        loadChatList();
+        loadNotes();
+        renderAvatars();
     }
 
-    // --- PROFILE (GALACTIC U) ---
-    function loadProfile() {
-        db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
-            const d = doc.data();
-            document.getElementById('display-name').innerText = d.name;
-            document.getElementById('user-pfp').src = d.photo;
-            document.getElementById('u-display-name').innerText = d.name;
-            document.getElementById('u-display-img').src = d.photo;
-            document.getElementById('u-display-gender').innerText = d.gender.toUpperCase();
-            document.getElementById('edit-name').value = d.name;
-            document.getElementById('edit-pfp').value = d.photo;
-            document.getElementById('edit-gender').value = d.gender;
-        });
-    }
-
-    async function updateProfile() {
-        await db.collection('users').doc(currentUser.uid).update({
-            name: document.getElementById('edit-name').value,
-            photo: document.getElementById('edit-pfp').value,
-            gender: document.getElementById('edit-gender').value
-        });
-        alert("Identity Synced with Galactic Network.");
-    }
-
-    // --- COSMIC CHAT ---
-    function loadChatSidebar() {
-        db.collection('chats').where('participants', 'array-contains', currentUser.uid).onSnapshot(snap => {
-            const sidebar = document.getElementById('chat-sidebar-list');
-            sidebar.innerHTML = '';
+    // --- CHAT SYSTEM ---
+    function loadChatList() {
+        db.collection('chats').where('participants', 'array-contains', user.uid).onSnapshot(snap => {
+            const container = document.getElementById('conversation-items');
+            container.innerHTML = '';
             snap.forEach(doc => {
-                const chat = doc.data();
+                const d = doc.data();
                 const div = document.createElement('div');
-                div.className = `freq-item ${activeChatId === doc.id ? 'active' : ''}`;
-                div.innerHTML = `<strong>${chat.type === 'group' ? '🛰️' : '👤'}</strong> ${chat.chatName}`;
-                div.onclick = () => selectChat(doc.id, chat.chatName);
-                sidebar.appendChild(div);
+                div.className = 'chat-item';
+                div.onclick = () => openChat(doc.id, d.name, d.icon || inbuiltPFPs[1]);
+                div.innerHTML = `
+                    <img src="${d.icon || inbuiltPFPs[1]}">
+                    <div class="chat-info">
+                        <h4>${d.name}</h4>
+                        <p id="last-msg-${doc.id}">${d.lastMsg || 'No transmissions yet...'}</p>
+                    </div>
+                `;
+                container.appendChild(div);
             });
+        });
+    }
+
+    function openChat(id, name, icon) {
+        currentChatId = id;
+        document.getElementById('active-chat-view').style.display = 'flex';
+        document.getElementById('chat-controls').style.display = 'flex';
+        document.getElementById('chat-title').innerText = name;
+        document.getElementById('chat-icon').src = icon;
+        document.getElementById('chat-icon').style.display = 'block';
+        document.getElementById('chat-status').innerText = "Frequency Locked";
+        
+        if(window.innerWidth < 768) {
+            document.getElementById('sidebar').classList.add('hidden');
+            document.getElementById('main-content').classList.add('active');
+        }
+
+        db.collection('chats').doc(id).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
+            const area = document.getElementById('message-area');
+            area.innerHTML = '';
+            snap.forEach(m => {
+                const data = m.data();
+                const isMe = data.uid === user.uid;
+                area.innerHTML += `
+                    <div class="bubble ${isMe ? 'sent' : 'received'}">
+                        <div class="sender-name">${isMe ? 'YOU' : data.sender}</div>
+                        ${data.text}
+                    </div>
+                `;
+            });
+            area.scrollTop = area.scrollHeight;
+        });
+    }
+
+    async function sendMsg() {
+        const text = document.getElementById('msg-input').value.trim();
+        if(!text || !currentChatId) return;
+        document.getElementById('msg-input').value = '';
+        
+        const name = document.getElementById('my-name').innerText;
+        await db.collection('chats').doc(currentChatId).collection('messages').add({
+            text, uid: user.uid, sender: name, ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('chats').doc(currentChatId).update({ lastMsg: `${name}: ${text}` });
+    }
+
+    // --- NOTES (ACCORDION & UNIQUE HEADING) ---
+    async function postNote() {
+        const head = document.getElementById('note-head').value.trim();
+        const body = document.getElementById('note-body').value.trim();
+        if(!head || !body) return alert("Fill all fields.");
+
+        const existing = await db.collection('notes').where('head', '==', head).get();
+        if(!existing.empty) return alert("This heading is already in the Nebula archive.");
+
+        await db.collection('notes').add({
+            head, body, author: document.getElementById('my-name').innerText,
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Broadcasted!");
+        showTab('discover');
+    }
+
+    function loadNotes() {
+        db.collection('notes').orderBy('ts', 'desc').onSnapshot(snap => {
+            const box = document.getElementById('notes-feed');
+            box.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.innerHTML = `
+                    <div class="note-head" onclick="this.parentElement.classList.toggle('open')">
+                        <span>${d.head}</span>
+                        <span style="font-size:0.7rem; color:var(--accent)">OPEN TRANSMISSION</span>
+                    </div>
+                    <div class="note-body">
+                        <p>${d.body}</p>
+                        <small>Pilot: ${d.author}</small>
+                    </div>
+                `;
+                box.appendChild(card);
+            });
+        });
+    }
+
+    // --- WHATSAPP GROUP CREATION ---
+    async function openModal() {
+        document.getElementById('group-modal').style.display = 'flex';
+        const list = document.getElementById('contact-list');
+        list.innerHTML = 'Finding Pilots...';
+        const users = await db.collection('users').get();
+        list.innerHTML = '';
+        users.forEach(doc => {
+            if(doc.id === user.uid) return;
+            list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222;">
+                <input type="checkbox" class="user-sel" value="${doc.id}"> ${doc.data().name}
+            </div>`;
         });
     }
 
     async function createGroup() {
-        const gName = prompt("Frequency Name (Group Name):");
-        if(!gName) return;
+        const name = document.getElementById('group-name').value;
+        const selected = Array.from(document.querySelectorAll('.user-sel:checked')).map(i => i.value);
+        if(!name || selected.length === 0) return alert("Need name and members.");
+        
+        selected.push(user.uid);
         await db.collection('chats').add({
-            chatName: gName, type: 'group', participants: [currentUser.uid]
+            name, participants: selected, icon: inbuiltPFPs[1], lastMsg: 'Frequency Created'
+        });
+        closeModal();
+    }
+
+    // --- PROFILE & UI ---
+    function renderAvatars() {
+        const grid = document.getElementById('avatar-picker');
+        inbuiltPFPs.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'avatar-opt';
+            img.onclick = () => {
+                document.querySelectorAll('.avatar-opt').forEach(i => i.classList.remove('selected'));
+                img.classList.add('selected');
+                document.getElementById('pfp-url').value = url;
+            };
+            grid.appendChild(img);
         });
     }
 
-    // FIXED: The Message Publisher helper
-    async function startChat(otherId, otherName) {
-        if(otherId === currentUser.uid) return;
-        const id = [currentUser.uid, otherId].sort().join('_');
-        
-        // Switch view first for better UX
-        switchView('chats');
-        
-        await db.collection('chats').doc(id).set({
-            chatName: otherName,
-            type: 'private',
-            participants: [currentUser.uid, otherId]
-        }, {merge: true});
-        
-        selectChat(id, otherName);
+    async function saveProfile() {
+        await db.collection('users').doc(user.uid).update({
+            name: document.getElementById('pilot-callsign').value,
+            pfp: document.getElementById('pfp-url').value
+        });
+        alert("Identity Synced");
     }
 
-    function selectChat(id, name) {
-        activeChatId = id;
-        document.getElementById('chat-header').innerText = "Signal: " + name;
-        loadChatSidebar(); // Refresh active state
-        
-        db.collection('chats').doc(id).collection('messages').orderBy('time').onSnapshot(snap => {
-            const box = document.getElementById('chat-messages');
-            box.innerHTML = '';
-            snap.forEach(mDoc => {
-                const m = mDoc.data();
-                const cls = m.sender === currentUser.uid ? 'me' : 'them';
-                box.innerHTML += `<div class="msg-bubble ${cls}"><strong>${m.senderName}:</strong><br>${m.text}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
+    function loadIdentity() {
+        db.collection('users').doc(user.uid).onSnapshot(doc => {
+            const d = doc.data();
+            document.getElementById('my-pfp').src = d.pfp;
+            document.getElementById('my-name').innerText = d.name;
+            document.getElementById('pfp-url').value = d.pfp;
+            document.getElementById('pilot-callsign').value = d.name;
         });
     }
 
-    async function sendMessage() {
-        const text = document.getElementById('msg-input').value;
-        if(!text || !activeChatId) return;
-        await db.collection('chats').doc(activeChatId).collection('messages').add({
-            text, sender: currentUser.uid, senderName: document.getElementById('display-name').innerText,
-            time: firebase.firestore.FieldValue.serverTimestamp()
+    function showTab(t) {
+        ['chats','discover','transmit','profile'].forEach(id => {
+            document.getElementById('tab-'+id).style.display = (id === t) ? 'block' : 'none';
         });
-        document.getElementById('msg-input').value = '';
+        document.getElementById('active-chat-view').style.display = (t === 'chats') ? 'flex' : 'none';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
     }
 
-    // --- NOTES & DISCOVER ---
-    async function saveNote() {
-        await db.collection('notes').add({
-            content: document.getElementById('note-body').value,
-            visibility: document.getElementById('note-privacy').value,
-            owner: currentUser.uid,
-            ownerName: document.getElementById('display-name').innerText,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        document.getElementById('note-body').value = '';
-        alert("Transmission Sent.");
+    function backToSidebar() {
+        document.getElementById('sidebar').classList.remove('hidden');
+        document.getElementById('main-content').classList.remove('active');
     }
 
-    function loadDiscover() {
-        db.collection('notes').where('visibility', '==', 'public').onSnapshot(snap => {
-            const feed = document.getElementById('discover-feed');
-            feed.innerHTML = '';
-            snap.forEach(doc => {
-                const n = doc.data();
-                const safeName = n.ownerName.replace(/'/g, "\\'"); // Fix for names with quotes
-                feed.innerHTML += `
-                    <div class="card">
-                        <h4 style="color:var(--accent); margin:0 0 10px;">${n.ownerName}</h4>
-                        <p>${n.content}</p>
-                        <button class="btn-ghost" onclick="startChat('${n.owner}', '${safeName}')">Message Publisher</button>
-                    </div>`;
-            });
-        });
-    }
+    function closeModal() { document.getElementById('group-modal').style.display = 'none'; }
 
-    function switchView(id) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('view-' + id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(id === 'my-notes') loadArchives();
-    }
-
-    function loadArchives() {
-        db.collection('notes').where('owner', '==', currentUser.uid).onSnapshot(snap => {
-            const feed = document.getElementById('personal-feed');
-            feed.innerHTML = '';
-            snap.forEach(d => feed.innerHTML += `<div class="card"><strong>[${d.data().visibility.toUpperCase()}]</strong><br>${d.data().content}</div>`);
-        });
-    }
-
-    // --- BACKGROUND (STARS) ---
+    // STARFIELD
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    let mouse = { x: 0, y: 0 };
-    let ctrlPressed = false;
-
-    window.addEventListener('resize', initStars);
-    if(!isMobile) {
-        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-        window.addEventListener('keydown', e => { if(e.key === 'Control') ctrlPressed = true; });
-        window.addEventListener('keyup', e => { if(e.key === 'Control') ctrlPressed = false; });
-    }
-
-    function initStars() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        stars = Array.from({length: 200}, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 1.5
-        }));
-    }
-
-    function animate() {
-        ctx.fillStyle = '#000005';
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-        ctx.fillStyle = 'white';
-        stars.forEach(s => {
-            if (isMobile) {
-                s.x += 0.2;
-                if(s.x > canvas.width) s.x = 0;
-            } else {
-                let speed = ctrlPressed ? 5 : 1;
-                let dx = (mouse.x - canvas.width/2) * 0.01 * speed;
-                let dy = (mouse.y - canvas.height/2) * 0.01 * speed;
-                s.x -= dx; s.y -= dy;
-                if(s.x < 0) s.x = canvas.width; if(s.x > canvas.width) s.x = 0;
-                if(s.y < 0) s.y = canvas.height; if(s.y > canvas.height) s.y = 0;
-            }
-            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-        });
-        requestAnimationFrame(animate);
-    }
-
-    initStars(); animate();
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = Array.from({length: 100}, () => ({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5})); }
+    function draw() { ctx.fillStyle = '#03030b'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle = 'white'; stars.forEach(s => { s.x += 0.2; if(s.x > canvas.width) s.x = 0; ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(draw); }
+    window.onresize = resize; resize(); draw();
 </script>
 </body>
 </html>
+
 
 
 
