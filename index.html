@@ -3,694 +3,1115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Sovereign | Lightning Fast v2.2</title>
+    <title>Nexus Social</title>
     
-    <!-- Firebase SDKs (Latest Stable) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         /* ========================================
-           ULTRA-FAST CSS (Optimized for 60fps)
+           PERFECT RESPONSIVE DESIGN - Mobile First
            ======================================== */
         :root {
             --primary: #00d2ff;
-            --primary-glow: rgba(0, 210, 255, 0.3);
             --secondary: #9d50bb;
-            --wa-green: #00a884;
-            --reddit-orange: #ff4500;
-            --bg-dark: #050508;
-            --panel-dark: #0a0a14;
-            --glass: rgba(10, 10, 20, 0.9);
-            --border: rgba(255, 255, 255, 0.08);
-            --text-high: #ffffff;
-            --text-mid: #b0b0b0;
-            --text-low: #606060;
+            --success: #00a884;
             --danger: #ef4444;
-            --success: #10b981;
-            --shadow: 0 10px 30px rgba(0,0,0,0.5);
-            --transition-fast: all 0.2s ease;
+            --warning: #f59e0b;
+            --bg-dark: #0a0a0f;
+            --panel: rgba(15, 15, 25, 0.98);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --glow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { 
-            height: 100vh; width: 100vw; background: var(--bg-dark); 
-            color: var(--text-high); font-family: system-ui, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            height: 100vh;
             overflow: hidden;
+            line-height: 1.5;
         }
 
-        /* Starfield Canvas */
-        #galaxy-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-        /* Loading Screen */
-        #loading-overlay {
-            position: fixed; inset: 0; z-index: 10000; background: var(--bg-dark);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* Loading & Background */
+        #stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
         .spinner {
-            width: 50px; height: 50px; border: 3px solid rgba(0,210,255,0.2);
-            border-top: 3px solid var(--primary); border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(0, 210, 255, 0.2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { margin-top: 20px; color: var(--text-mid); font-size: 1rem; }
 
-        /* Main Shell - Mobile First */
-        .nexus-shell {
-            display: none; height: 100vh; width: 100vw; position: relative; z-index: 10;
-            flex-direction: column;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* Mobile Layout */
+        /* Main App */
+        #app {
+            display: none;
+            height: 100vh;
+        }
+
+        /* MOBILE LAYOUT */
         @media (max-width: 768px) {
-            .nexus-shell { 
-                grid-template-areas: 
-                    "nav" 
-                    "sidebar" 
-                    "main" 
-                    "profile"; 
+            #app {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #main-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--panel);
+                display: flex;
+                z-index: 100;
+                border-top: 1px solid var(--border);
+                backdrop-filter: blur(20px);
+            }
+
+            .nav-item {
+                flex: 1;
+                padding: 14px 8px;
+                text-align: center;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.85rem;
+            }
+
+            .nav-item.active {
+                color: var(--primary);
+                background: rgba(0, 210, 255, 0.1);
+            }
+
+            #content {
+                height: calc(100vh - 80px);
+                overflow-y: auto;
+                padding-bottom: 80px;
+                padding: 20px;
+            }
+
+            .section {
+                display: none;
+                min-height: 100vh;
+            }
+
+            .section.active {
+                display: block;
             }
         }
 
-        /* Tablet+ Layout */
+        /* DESKTOP LAYOUT */
         @media (min-width: 769px) {
-            .nexus-shell { 
-                display: grid; 
-                grid-template-columns: 70px 350px 1fr 280px; 
+            #app {
+                display: grid !important;
+                grid-template-columns: 320px 1fr 320px;
+                grid-template-rows: 1fr;
+                height: 100vh;
+            }
+
+            #sidebar {
+                border-right: 1px solid var(--border);
+                overflow-y: auto;
+                background: var(--panel);
+            }
+
+            #content {
+                overflow-y: auto;
+                padding: 32px;
+            }
+
+            #profile-panel {
+                border-left: 1px solid var(--border);
+                overflow-y: auto;
+                background: var(--panel);
+                padding: 32px 24px;
+            }
+
+            #main-nav {
+                display: none !important;
             }
         }
 
-        /* Sector Nav */
-        .sector-nav { 
-            background: rgba(2,2,5,0.95); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px;
+        /* COMPONENTS */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-card, .chat-thread {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .user-card:hover, .chat-thread:hover {
+            background: rgba(0, 210, 255, 0.08);
+            border-color: var(--border);
+            transform: translateX(4px);
+        }
+
+        .composer {
+            background: var(--glass);
+            padding: 28px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+            border: 1px solid var(--border);
             backdrop-filter: blur(20px);
         }
-        .sector-icon {
-            width: 48px; height: 48px; border-radius: 50%; background: rgba(17,17,25,0.8);
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            border: 2px solid transparent; transition: var(--transition-fast);
-            color: var(--text-mid); font-weight: 900;
-        }
-        .sector-icon:hover, .sector-icon.active { 
-            background: var(--primary); color: #000; border-color: var(--primary);
+
+        .composer input, .composer textarea {
+            width: 100%;
+            background: rgba(25, 25, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
 
-        /* Sidebar */
-        .frequency-sidebar { 
-            background: var(--panel-dark); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-        }
-        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid var(--border); }
-        .search-rail {
-            background: rgba(22,22,37,0.8); border-radius: 10px; display: flex; align-items: center;
-            padding: 12px 16px; margin-bottom: 20px;
-        }
-        .search-rail input { background: none; border: none; color: white; margin-left: 12px; flex: 1; }
-
-        .mode-tabs { display: flex; }
-        .mode-tab {
-            flex: 1; padding: 16px; text-align: center; cursor: pointer;
-            border-bottom: 3px solid transparent; transition: var(--transition-fast);
-        }
-        .mode-tab.active { 
-            background: rgba(0,210,255,0.1); color: var(--primary); 
-            border-bottom-color: var(--primary);
+        .composer input:focus, .composer textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: var(--glow);
+            background: rgba(25, 25, 35, 0.95);
         }
 
-        .list-container { flex: 1; overflow-y: auto; padding: 10px; }
-        .thread-item {
-            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
-            cursor: pointer; display: flex; align-items: center; gap: 15px;
-        }
-        .thread-item:hover { background: rgba(255,255,255,0.05); }
-        .thread-avatar { 
-            width: 44px; height: 44px; border-radius: 50%; 
-            background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center;
+        .composer textarea {
+            resize: vertical;
+            min-height: 120px;
+            max-height: 240px;
         }
 
-        /* Main Content */
-        .core-engine { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #reddit-view, #chat-view { flex: 1; overflow-y: auto; padding: 30px; display: none; }
-        #reddit-view.active, #chat-view.active { display: block; }
-
-        .composer-card {
-            background: rgba(26,26,27,0.9); border: 1px solid rgba(52,53,54,0.5);
-            border-radius: 12px; padding: 25px; margin-bottom: 30px;
-        }
-        .composer-input {
-            width: 100%; background: rgba(39,39,41,0.9); border: 1px solid rgba(52,53,54,0.5);
-            padding: 16px; border-radius: 8px; color: white; margin-bottom: 15px;
+        .btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 210, 255, 0.3);
             font-size: 1rem;
         }
-        .btn-primary {
-            background: var(--primary); color: #000; border: none; padding: 14px 28px;
-            border-radius: 25px; font-weight: 800; cursor: pointer; width: 100%;
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 210, 255, 0.4);
         }
 
-        .post-card {
-            background: rgba(26,26,27,0.9); border: 1px solid rgba(52,53,54,0.5);
-            border-radius: 12px; margin-bottom: 20px; padding: 20px; display: flex; gap: 20px;
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
-        .post-vote-rail { 
-            width: 50px; display: flex; flex-direction: column; align-items: center; 
-            color: var(--text-mid); font-weight: 900;
-        }
-        .vote-arrow { cursor: pointer; font-size: 1.2rem; padding: 5px; }
-        .vote-arrow:hover { color: var(--reddit-orange); }
 
-        /* Chat */
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .post {
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .post:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .post-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
         .chat-header {
-            height: 70px; background: rgba(16,27,33,0.95); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; padding: 0 25px;
-        }
-        .message-stream { height: calc(100% - 140px); overflow-y: auto; padding: 20px 0; }
-        .bubble {
-            max-width: 70%; padding: 12px 18px; border-radius: 18px; margin-bottom: 12px;
-        }
-        .sent { background: var(--wa-green); align-self: flex-end; margin-left: auto; }
-        .received { background: #202c33; align-self: flex-start; }
-
-        .editor-dock {
-            padding: 20px; background: rgba(17,27,33,0.95); border-top: 1px solid var(--border);
-        }
-        .rich-input {
-            flex: 1; background: rgba(42,57,66,0.9); border-radius: 25px; padding: 14px 20px;
-            color: white; border: none; min-height: 48px; resize: none;
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--panel);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        /* Profile */
-        .profile-sidebar {
-            background: rgba(2,2,5,0.95); border-left: 1px solid var(--border); padding: 30px 20px;
-        }
-        .profile-avatar {
-            width: 100px; height: 100px; border-radius: 50%; background: var(--primary);
-            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; color: #000; font-weight: 900;
-        }
-        .note-card {
-            background: rgba(17,17,25,0.8); padding: 15px; border-radius: 8px;
-            margin-bottom: 12px; border-left: 3px solid var(--primary);
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 200px);
         }
 
-        /* Modals */
-        .modal-overlay {
-            position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.9);
-            display: none; align-items: center; justify-content: center;
+        .message {
+            max-width: 70%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            position: relative;
         }
-        .modal-container {
-            background: var(--panel-dark); padding: 40px; border-radius: 20px;
-            max-width: 90vw; max-height: 90vh; overflow-y: auto;
+
+        .message.sent {
+            background: var(--success);
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+            color: white;
+        }
+
+        .message.received {
+            background: rgba(35, 35, 45, 0.9);
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .message-input {
+            display: flex;
+            gap: 16px;
+            padding: 24px 20px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            position: sticky;
+            bottom: 0;
+        }
+
+        .message-input textarea {
+            flex: 1;
+            background: rgba(35, 35, 45, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 16px 24px;
+            resize: none;
+            min-height: 56px;
+            max-height: 120px;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-content {
+            background: var(--panel);
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
             border: 1px solid var(--primary);
+            box-shadow: var(--shadow);
         }
 
-        .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 10px; }
-        .hidden { display: none !important; }
+        .error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 5rem;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 24px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10000;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transform: translateX(400px);
+            animation: slideIn 0.3s ease forwards;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
 
-<!-- Starfield -->
-<canvas id="galaxy-canvas"></canvas>
+<!-- Animated Background -->
+<canvas id="stars"></canvas>
 
-<!-- Loading -->
-<div id="loading-overlay">
+<!-- Loading Screen -->
+<div id="loading-screen">
     <div class="spinner"></div>
-    <p class="loading-text" id="loading-text">Initializing...</p>
-</div>
-
-<!-- Auth Modal -->
-<div id="auth-overlay" class="modal-overlay">
-    <div class="modal-container">
-        <h1 style="color: var(--primary); font-size: 2.5rem; margin-bottom: 10px;">NEXUS</h1>
-        <p style="opacity: 0.6; margin-bottom: 30px;">Lightning Fast v2.2</p>
-        <button class="btn-primary" onclick="login()">🔗 Google Login</button>
-        <p id="auth-error" class="error-msg hidden"></p>
-    </div>
-</div>
-
-<!-- Setup Modal -->
-<div id="setup-modal" class="modal-overlay">
-    <div class="modal-container">
-        <h2 style="color: var(--primary); margin-bottom: 20px;">Setup Pilot</h2>
-        <input id="pilot-name" class="composer-input" placeholder="Pilot Name (3+ chars)">
-        <textarea id="pilot-bio" class="composer-input" placeholder="Bio (optional)" style="height: 100px; margin-top: 15px;"></textarea>
-        <button class="btn-primary" onclick="setupPilot()" style="margin-top: 20px;">🚀 Launch</button>
-    </div>
+    <p style="color: var(--text-muted);">Connecting to Nexus...</p>
 </div>
 
 <!-- Main App -->
-<div class="nexus-shell" id="app-shell">
-    <!-- Nav -->
-    <nav class="sector-nav">
-        <div class="sector-icon active" onclick="setDomain('global')">🌐</div>
-        <div class="sector-icon" onclick="createSector()">+</div>
-        <div style="flex: 1;"></div>
-        <div class="sector-icon" onclick="logout()" style="color: var(--danger);">⚡</div>
-    </nav>
-
-    <!-- Sidebar -->
-    <aside class="frequency-sidebar">
-        <div class="sidebar-header">
-            <h3>FREQUENCY</h3>
-            <div class="search-rail">
-                <span>🔍</span>
-                <input id="search-input" placeholder="Search pilots..." oninput="searchPilots()">
+<div id="app">
+    <!-- Sidebar (Desktop + Discover/Chats) -->
+    <div id="sidebar">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+            <h3 class="section-title">
+                🔭 <span>Discover</span>
+            </h3>
+            <div id="discover-list" class="empty-state">
+                <span class="icon">👥</span>
+                <p>Discover new people nearby</p>
             </div>
         </div>
-        <div class="mode-tabs">
-            <div class="mode-tab active" id="tab-feed" onclick="setMode('feed')">📡 Feed</div>
-            <div class="mode-tab" id="tab-chat" onclick="setMode('chat')">💬 Chat</div>
-        </div>
-        <div class="list-container" id="sidebar-list"></div>
-    </aside>
-
-    <!-- Main -->
-    <main class="core-engine">
-        <div id="reddit-view">
-            <div class="composer-card">
-                <h4>Post</h4>
-                <input id="post-title" class="composer-input" placeholder="Title">
-                <textarea id="post-content" class="composer-input" placeholder="Content" style="height: 100px;"></textarea>
-                <span id="char-count" style="color: var(--text-low); font-size: 0.8rem;">0/2000</span>
-                <button class="btn-primary" onclick="createPost()">Post</button>
+        <div style="padding: 24px;">
+            <h3 class="section-title">
+                💬 <span>Messages</span>
+            </h3>
+            <div id="chat-list" class="empty-state">
+                <span class="icon">💬</span>
+                <p>Your conversations will appear here</p>
             </div>
-            <div id="feed"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="content">
+        <!-- Feed Section (Reddit-style) -->
+        <div id="feed-section" class="section active">
+            <div class="composer">
+                <h3 style="color: var(--primary); margin-bottom: 20px;">📝 Publish Note</h3>
+                <input id="note-title" placeholder="Unique note title (required)" maxlength="100">
+                <div class="error" id="title-error"></div>
+                <textarea id="note-content" placeholder="Share your thoughts with the Nexus... (max 2000 chars)" maxlength="2000"></textarea>
+                <div class="error" id="content-error"></div>
+                <div style="display: flex; gap: 16px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="nexus.clearComposer()">Clear</button>
+                    <button class="btn" id="publish-btn" onclick="nexus.publishNote()">🚀 Publish</button>
+                </div>
+            </div>
+            <div id="feed" class="empty-state">
+                <span class="icon">📭</span>
+                <p>No posts yet. <strong>Be the first to publish!</strong></p>
+            </div>
         </div>
 
-        <div id="chat-view">
-            <div class="chat-header">
-                <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
-                    <div id="chat-avatar" class="thread-avatar">?</div>
-                    <div>
-                        <div id="chat-name">Select Chat</div>
-                        <div style="font-size: 0.8rem; color: var(--wa-green);">● Online</div>
+        <!-- Chat Section (WhatsApp-style) -->
+        <div id="chat-section" class="section">
+            <div id="chat-header" class="chat-header" style="display: none;">
+                <div id="chat-avatar" class="user-avatar"></div>
+                <div style="flex: 1;">
+                    <div id="chat-name" style="font-weight: 700; font-size: 1.15rem;"></div>
+                    <div style="font-size: 0.85rem; color: var(--success);">● Online</div>
+                </div>
+                <button class="btn btn-secondary" onclick="nexus.backToChats()" style="padding: 10px 20px;">← Back</button>
+            </div>
+            <div id="chat-messages" class="chat-messages empty-state">
+                <span class="icon">💬</span>
+                <p>Select a chat to start messaging</p>
+            </div>
+            <div id="chat-input" class="message-input" style="display: none;">
+                <textarea id="message-textarea" placeholder="Type a message..." rows="1"></textarea>
+                <button class="btn" onclick="nexus.sendMessage()" disabled>Send</button>
+            </div>
+        </div>
+
+        <!-- Profile Section (Instagram-style) -->
+        <div id="profile-section" class="section">
+            <div class="composer" style="max-width: 600px; margin: 0 auto;">
+                <h2 style="text-align: center; margin-bottom: 32px; color: var(--primary);">👤 Your Profile</h2>
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <div id="profile-edit-avatar" class="user-avatar" style="width: 96px; height: 96px; margin: 0 auto 16px; font-size: 2.5rem;">NJ</div>
+                </div>
+                <input id="profile-name" placeholder="Display Name *">
+                <div class="error" id="name-error"></div>
+                <textarea id="profile-bio" placeholder="Bio (optional)" maxlength="160"></textarea>
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px;">
+                    <button class="btn btn-secondary" onclick="nexus.loadProfile()">Reload</button>
+                    <button class="btn" onclick="nexus.saveProfile()">💾 Save Profile</button>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat">
+                    <div id="stat-posts" class="stat-value">0</div>
+                    <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat">
+                    <div id="stat-karma" class="stat-value">0</div>
+                    <div class="stat-label">Karma</div>
+                </div>
+                <div class="stat">
+                    <div id="stat-followers" class="stat-value">0</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+            </div>
+            <div id="profile-posts" class="empty-state">
+                <span class="icon">📝</span>
+                <p>Your posts will appear here</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Panel (Desktop Only) -->
+    <div id="profile-panel">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+            <h3 class="section-title">👤 Profile</h3>
+            <div id="profile-summary">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div id="profile-avatar" class="user-avatar" style="width: 80px; height: 80px; margin: 0 auto 16px; font-size: 2rem;">NJ</div>
+                    <div id="profile-display-name" style="font-weight: 700; font-size: 1.3rem; margin-bottom: 8px;">Nikhil Joshi</div>
+                    <div id="profile-bio-display" style="color: var(--text-muted); font-size: 0.95rem;">Delhi, India</div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div id="stat-posts-profile" class="stat-value">0</div>
+                        <div>Posts</div>
+                    </div>
+                    <div class="stat">
+                        <div id="stat-karma-profile" class="stat-value">0</div>
+                        <div>Karma</div>
+                    </div>
+                    <div class="stat">
+                        <div id="stat-followers-profile" class="stat-value">0</div>
+                        <div>Followers</div>
                     </div>
                 </div>
             </div>
-            <div class="message-stream" id="messages"></div>
-            <div class="editor-dock">
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <div contenteditable="true" id="message-input" class="rich-input" placeholder="Type message..."></div>
-                    <button class="btn-primary" style="width: 50px; height: 50px; border-radius: 50%; padding: 0;" onclick="sendMessage()">➤</button>
-                </div>
+        </div>
+        <div style="padding: 24px;">
+            <h3 class="section-title">📝 Recent Posts</h3>
+            <div id="profile-recent-posts" class="empty-state">
+                <span class="icon">📭</span>
+                <p>No posts yet</p>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- Profile -->
-    <aside class="profile-sidebar">
-        <div class="profile-avatar" id="profile-avatar">?</div>
-        <h3 id="profile-name">Loading...</h3>
-        <p id="profile-bio"></p>
-        <div style="margin: 30px 0;">
-            <div style="text-align: center; color: var(--text-mid); margin-bottom: 10px;">Karma: <span id="karma-count">0</span></div>
+    <!-- Mobile Navigation -->
+    <div id="main-nav">
+        <div class="nav-item active" data-section="feed">
+            <span>📝</span>
+            <span>Feed</span>
         </div>
-        <h4 style="color: var(--text-low); margin-bottom: 15px;">Notes</h4>
-        <div id="notes-list"></div>
-        <button class="btn-primary" onclick="showNoteModal()" style="margin-top: 20px; padding: 12px;">+ Note</button>
-    </aside>
-</div>
-
-<!-- Note Modal -->
-<div id="note-modal" class="modal-overlay">
-    <div class="modal-container">
-        <h3>Add Note</h3>
-        <textarea id="note-text" class="composer-input" style="height: 150px;"></textarea>
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
-            <button class="btn-primary" onclick="saveNote()">Save</button>
-            <button onclick="closeModal('note-modal')" style="flex: 1; background: transparent; color: var(--text-mid); border: 1px solid var(--border);">Cancel</button>
+        <div class="nav-item" data-section="chat">
+            <span>💬</span>
+            <span>Messages</span>
+        </div>
+        <div class="nav-item" data-section="profile">
+            <span>👤</span>
+            <span>Profile</span>
         </div>
     </div>
 </div>
 
+<!-- Auth Modal -->
+<div id="auth-modal" class="modal">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin-bottom: 24px; text-align: center;">Welcome to Nexus</h2>
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <button class="btn" style="flex: 1;" onclick="nexus.signInWithGoogle()">🔗 Google</button>
+            <button class="btn btn-secondary" style="flex: 1;" onclick="nexus.signInAnonymously()">👻 Guest</button>
+        </div>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">No account needed. Continue as guest to explore.</p>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toast-container"></div>
+
 <script>
-/* ========================================
-   NEXUS SOVEREIGN v2.2 - LIGHTNING FAST (2s load)
-   🚀 PRODUCTION READY | NO MORE 5MIN HANGS
-   ======================================== */
+    // Firebase Config (Replace with your config)
+    const firebaseConfig = {
+        apiKey: "your-api-key",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "your-app-id"
+    };
 
-// ========================================
-// FIREBASE & STATE
-// ========================================
-const firebaseConfig = {
-    apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
-    authDomain: "cosmic-notes-f7648.firebaseapp.com",
-    projectId: "cosmic-notes-f7648",
-    storageBucket: "cosmic-notes-f7648.firebasestorage.app",
-    messagingSenderId: "70656136344",
-    appId: "1:70656136344:web:640193b83f63cac569aced"
-};
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+    // Nexus App Object
+    window.nexus = {
+        currentUser: null,
+        currentChat: null,
+        isInitialized: false,
 
-// State
-let user = null;
-let currentChat = null;
-let currentDomain = 'global';
-let listeners = [];
+        init() {
+            this.createStars();
+            this.setupEventListeners();
+            this.checkAuth();
+            this.loadProfile();
+        },
 
-// ========================================
-// ULTRA-FAST INIT (2s max)
-// ========================================
-function setLoading(text) {
-    document.getElementById('loading-text').textContent = text;
-}
+        createStars() {
+            const canvas = document.getElementById('stars');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
-async function initApp() {
-    setLoading('🔗 Connecting...');
-    
-    auth.onAuthStateChanged(async (u) => {
-        if (u) {
-            setLoading('🧠 Loading profile...');
-            
-            // Fast profile load (5s timeout)
-            try {
-                const doc = await Promise.race([
-                    db.collection('users').doc(u.uid).get(),
-                    new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))
-                ]);
-                
-                if (doc.exists) {
-                    user = { id: u.uid, ...doc.data() };
-                    showApp();
-                } else {
-                    showSetup();
-                }
-            } catch (e) {
-                showError('Profile load timeout. Try again.');
-                showSetup();
+            const stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    speed: Math.random() * 0.5 + 0.1
+                });
             }
-        } else {
-            showLogin();
-        }
-    });
-}
 
-// ========================================
-// UI CONTROL
-// ========================================
-function showLogin() { 
-    document.getElementById('auth-overlay').classList.remove('hidden');
-    document.getElementById('app-shell').classList.add('hidden');
-}
-function showSetup() { 
-    document.getElementById('auth-overlay').classList.add('hidden');
-    document.getElementById('setup-modal').classList.remove('hidden');
-}
-function showApp() {
-    document.getElementById('loading-overlay').classList.add('hidden');
-    document.getElementById('app-shell').classList.remove('hidden');
-    updateProfile();
-    loadFeed();
-}
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                stars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    star.y += star.speed;
+                    if (star.y > canvas.height) star.y = 0;
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
 
-function showError(msg) {
-    const el = document.getElementById('auth-error');
-    el.textContent = msg;
-    el.classList.remove('hidden');
-    setTimeout(() => el.classList.add('hidden'), 5000);
-}
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        },
 
-// ========================================
-// AUTH
-// ========================================
-async function login() {
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider);
-    } catch (e) {
-        showError(`Login failed: ${e.message}`);
-    }
-}
+        setupEventListeners() {
+            // Mobile Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.switchSection(item.dataset.section);
+                });
+            });
 
-async function setupPilot() {
-    const name = document.getElementById('pilot-name').value.trim();
-    if (name.length < 3) return showError('Name must be 3+ chars');
-    
-    try {
-        await db.collection('users').doc(auth.currentUser.uid).set({
-            name,
-            bio: document.getElementById('pilot-bio').value.trim(),
-            karma: 0,
-            posts: 0,
-            joined: firebase.firestore.Timestamp.now()
-        });
-        closeModal('setup-modal');
-    } catch (e) {
-        showError('Setup failed');
-    }
-}
+            // Auto-resize textarea
+            document.addEventListener('input', (e) => {
+                if (e.target.tagName === 'TEXTAREA') {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                }
+            });
 
-async function logout() {
-    await auth.signOut();
-}
+            // Chat list clicks
+            document.getElementById('chat-list').addEventListener('click', (e) => {
+                if (e.target.closest('.chat-thread')) {
+                    this.openChat(e.target.closest('.chat-thread').dataset.userId);
+                }
+            });
+        },
 
-// ========================================
-// CORE FEATURES
-// ========================================
-function setMode(mode) {
-    document.getElementById('tab-feed').classList.toggle('active', mode === 'feed');
-    document.getElementById('tab-chat').classList.toggle('active', mode === 'chat');
-    document.getElementById('reddit-view').classList.toggle('active', mode === 'feed');
-    document.getElementById('chat-view').classList.toggle('active', mode === 'chat');
-    
-    if (mode === 'chat') loadChats();
-}
+        async checkAuth() {
+            this.showLoading(false);
+            
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    this.currentUser = user;
+                    if (user.isAnonymous) {
+                        await this.createGuestProfile();
+                    }
+                    this.showApp();
+                    this.loadFeed();
+                    this.loadChats();
+                    this.loadProfile();
+                    this.loadDiscover();
+                } else {
+                    document.getElementById('auth-modal').style.display = 'flex';
+                }
+            });
+        },
 
-async function createPost() {
-    const title = document.getElementById('post-title').value.trim();
-    const content = document.getElementById('post-content').value.trim();
-    
-    if (!title) return;
-    
-    try {
-        await db.collection('posts').add({
-            title, content, author: user.name, authorId: user.id,
-            domain: currentDomain, karma: 0, created: firebase.firestore.Timestamp.now()
-        });
-        
-        document.getElementById('post-title').value = '';
-        document.getElementById('post-content').value = '';
-        loadFeed();
-    } catch (e) {
-        showError('Post failed');
-    }
-}
+        async createGuestProfile() {
+            const guestId = `guest_${Date.now()}`;
+            await db.collection('users').doc(guestId).set({
+                displayName: 'Guest User',
+                bio: 'Exploring Nexus...',
+                avatar: '👻',
+                posts: 0,
+                karma: 0,
+                followers: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                isGuest: true
+            });
+        },
 
-function loadFeed() {
-    const feed = document.getElementById('feed');
-    feed.innerHTML = '<div style="padding:30px; text-align:center; color:var(--text-mid);">Loading...</div>';
-    
-    db.collection('posts')
-        .where('domain', '==', currentDomain)
-        .orderBy('created', 'desc')
-        .limit(15)
-        .get()
-        .then(snap => {
-            feed.innerHTML = '';
-            snap.forEach(doc => {
-                const p = doc.data();
-                const div = document.createElement('div');
-                div.className = 'post-card';
-                div.innerHTML = `
-                    <div class="post-vote-rail">
-                        <div class="vote-arrow">▲</div>
-                        <div>${p.karma || 0}</div>
-                        <div class="vote-arrow">▼</div>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:0.85rem; color:var(--text-low); margin-bottom:10px;">
-                            u/${p.author} • ${p.created.toDate().toLocaleString()}
+        signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+            document.getElementById('auth-modal').style.display = 'none';
+        },
+
+        signInAnonymously() {
+            auth.signInAnonymously();
+            document.getElementById('auth-modal').style.display = 'none';
+        },
+
+        showLoading(show) {
+            document.getElementById('loading-screen').style.display = show ? 'flex' : 'none';
+        },
+
+        showApp() {
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('loading-screen').style.display = 'none';
+            this.isInitialized = true;
+        },
+
+        switchSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(`${section}-section`).classList.add('active');
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        },
+
+        clearComposer() {
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-content').value = '';
+            document.getElementById('note-content').style.height = '120px';
+            this.clearErrors();
+        },
+
+        clearErrors() {
+            document.querySelectorAll('.error').forEach(error => {
+                error.style.display = 'none';
+                error.textContent = '';
+            });
+        },
+
+        validateNote() {
+            this.clearErrors();
+            let isValid = true;
+
+            const title = document.getElementById('note-title').value.trim();
+            const content = document.getElementById('note-content').value.trim();
+
+            if (!title) {
+                document.getElementById('title-error').textContent = 'Title is required';
+                document.getElementById('title-error').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!content) {
+                document.getElementById('content-error').textContent = 'Content is required';
+                document.getElementById('content-error').style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        },
+
+        async publishNote() {
+            if (!this.validateNote()) return;
+
+            const title = document.getElementById('note-title').value.trim();
+            const content = document.getElementById('note-content').value.trim();
+
+            try {
+                document.getElementById('publish-btn').disabled = true;
+                document.getElementById('publish-btn').textContent = 'Publishing...';
+
+                const postRef = await db.collection('posts').add({
+                    title,
+                    content,
+                    authorId: this.currentUser.uid,
+                    authorName: 'Nikhil Joshi', // You can fetch from user profile
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    upvotes: 0,
+                    comments: 0
+                });
+
+                this.showToast('Note published successfully! 🚀');
+                this.clearComposer();
+                this.loadFeed();
+                this.updateUserStats('posts', 1);
+            } catch (error) {
+                this.showToast('Failed to publish. Try again.', 'error');
+                console.error('Publish error:', error);
+            } finally {
+                document.getElementById('publish-btn').disabled = false;
+                document.getElementById('publish-btn').textContent = '🚀 Publish';
+            }
+        },
+
+        async loadFeed() {
+            try {
+                const snapshot = await db.collection('posts')
+                    .orderBy('createdAt', 'desc')
+                    .limit(20)
+                    .get();
+
+                const feed = document.getElementById('feed');
+                feed.innerHTML = '';
+
+                if (snapshot.empty) {
+                    feed.innerHTML = `
+                        <div class="empty-state">
+                            <span class="icon">📭</span>
+                            <p>No posts yet. <strong>Be the first to publish!</strong></p>
                         </div>
-                        <h3>${p.title}</h3>
-                        <p style="color:var(--text-mid); line-height:1.5;">${p.content.substring(0, 200)}${p.content.length > 200 ? '...' : ''}</p>
+                    `;
+                    return;
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const post = doc.data();
+                    feed.innerHTML += this.renderPost(post, doc.id);
+                });
+            } catch (error) {
+                console.error('Load feed error:', error);
+            }
+        },
+
+        renderPost(post, id) {
+            const timeAgo = this.timeAgo(post.createdAt?.toDate());
+            return `
+                <div class="post" data-post-id="${id}">
+                    <div class="post-header">
+                        <div class="user-avatar">${post.authorName?.[0] || 'N'}</div>
+                        <span>${post.authorName || 'Anonymous'}</span>
+                        <span>• ${timeAgo}</span>
                     </div>
-                `;
-                feed.appendChild(div);
+                    <div class="post-title">${post.title}</div>
+                    <div style="color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">${post.content}</div>
+                    <div class="post-actions">
+                        <span>👍 ${post.upvotes || 0}</span>
+                        <span>💬 ${post.comments || 0}</span>
+                    </div>
+                </div>
+            `;
+        },
+
+        async loadChats() {
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = `
+                <div class="empty-state">
+                    <span class="icon">💬</span>
+                    <p>Your conversations will appear here</p>
+                </div>
+            `;
+        },
+
+        openChat(userId) {
+            this.currentChat = userId;
+            document.getElementById('chat-header').style.display = 'flex';
+            document.getElementById('chat-messages').classList.remove('empty-state');
+            document.getElementById('chat-input').style.display = 'flex';
+            document.getElementById('chat-name').textContent = 'Sample User';
+        },
+
+        backToChats() {
+            this.currentChat = null;
+            document.getElementById('chat-header').style.display = 'none';
+            document.getElementById('chat-messages').classList.add('empty-state');
+            document.getElementById('chat-input').style.display = 'none';
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="empty-state">
+                    <span class="icon">💬</span>
+                    <p>Select a chat to start messaging</p>
+                </div>
+            `;
+        },
+
+        sendMessage() {
+            const textarea = document.getElementById('message-textarea');
+            const message = textarea.value.trim();
+            if (!message) return;
+
+            const messages = document.getElementById('chat-messages');
+            messages.innerHTML += `
+                <div class="message sent">
+                    ${message}
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+
+            textarea.value = '';
+            textarea.style.height = '56px';
+            messages.scrollTop = messages.scrollHeight;
+
+            this.showToast('Message sent!');
+        },
+
+        async loadProfile() {
+            try {
+                const userDoc = await db.collection('users').doc(this.currentUser.uid).get();
+                if (userDoc.exists) {
+                    const user = userDoc.data();
+                    document.getElementById('profile-name').value = user.displayName || '';
+                    document.getElementById('profile-bio').value = user.bio || '';
+                    
+                    // Update all profile displays
+                    this.updateProfileDisplay(user);
+                    this.updateStats(user);
+                }
+            } catch (error) {
+                console.error('Load profile error:', error);
+            }
+        },
+
+        updateProfileDisplay(user) {
+            const avatar = document.getElementById('profile-avatar');
+            const displayName = document.getElementById('profile-display-name');
+            const bio = document.getElementById('profile-bio-display');
+            const editAvatar = document.getElementById('profile-edit-avatar');
+
+            avatar.textContent = user.avatar || user.displayName?.[0] || 'N';
+            displayName.textContent = user.displayName || 'Nikhil Joshi';
+            bio.textContent = user.bio || 'Delhi, India';
+            editAvatar.textContent = user.avatar || 'NJ';
+        },
+
+        updateStats(user) {
+            const stats = ['posts', 'karma', 'followers'];
+            stats.forEach(stat => {
+                const elements = document.querySelectorAll(`#stat-${stat}, #stat-${stat}-profile`);
+                elements.forEach(el => el.textContent = user[stat] || 0);
             });
-        });
-}
+        },
 
-function loadChats() {
-    const list = document.getElementById('sidebar-list');
-    list.innerHTML = 'Loading chats...';
-    
-    db.collection('chats')
-        .where('users', 'array-contains', user.id)
-        .orderBy('lastMessage', 'desc')
-        .limit(10)
-        .get()
-        .then(snap => {
-            list.innerHTML = '';
-            snap.forEach(doc => {
-                const chat = doc.data();
-                const other = chat.users.find(id => id !== user.id);
-                const item = document.createElement('div');
-                item.className = 'thread-item';
-                item.innerHTML = `<div class="thread-avatar">${chat.name?.[0] || '?'}</div>
-                    <div style="flex:1;"><div>${chat.name || 'Unknown'}</div><div style="font-size:0.8rem;color:var(--text-low);">${chat.lastMessage || 'No messages'}</div></div>`;
-                item.onclick = () => openChat(doc.id, chat);
-                list.appendChild(item);
+        async saveProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            const bio = document.getElementById('profile-bio').value.trim();
+
+            if (!name) {
+                document.getElementById('name-error').textContent = 'Name is required';
+                document.getElementById('name-error').style.display = 'block';
+                return;
+            }
+
+            try {
+                await db.collection('users').doc(this.currentUser.uid).update({
+                    displayName: name,
+                    bio: bio,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                this.showToast('Profile saved! ✨');
+                this.loadProfile();
+            } catch (error) {
+                console.error('Save profile error:', error);
+            }
+        },
+
+        async updateUserStats(stat, increment = 1) {
+            await db.collection('users').doc(this.currentUser.uid).update({
+                [stat]: firebase.firestore.FieldValue.increment(increment)
             });
-        });
-}
+            this.loadProfile();
+        },
 
-function openChat(chatId, chat) {
-    currentChat = chatId;
-    document.getElementById('chat-name').textContent = chat.name || 'Chat';
-    loadMessages();
-}
+        async loadDiscover() {
+            // Simulate nearby users
+            const discoverList = document.getElementById('discover-list');
+            discoverList.innerHTML = `
+                <div class="user-card" style="margin-top: 20px;">
+                    <div class="user-avatar">A</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">Anjali R.</div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">Delhi • "Tech enthusiast"</div>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <div class="user-avatar">R</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">Rahul S.</div>
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">Noida • "Startup Founder"</div>
+                    </div>
+                </div>
+            `;
+        },
 
-function loadMessages() {
-    const msgs = document.getElementById('messages');
-    msgs.innerHTML = '';
-    
-    db.collection('chats').doc(currentChat).collection('messages')
-        .orderBy('timestamp')
-        .limit(50)
-        .get()
-        .then(snap => {
-            snap.forEach(doc => {
-                const m = doc.data();
-                const bubble = document.createElement('div');
-                bubble.className = `bubble ${m.authorId === user.id ? 'sent' : 'received'}`;
-                bubble.innerHTML = `<div>${m.text}</div><div style="font-size:0.7rem;opacity:0.7;margin-top:5px;">${m.timestamp.toDate().toLocaleTimeString()}</div>`;
-                msgs.appendChild(bubble);
-            });
-            msgs.scrollTop = msgs.scrollHeight;
-        });
-}
+        timeAgo(date) {
+            const now = new Date();
+            const diff = now - new Date(date);
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
 
-async function sendMessage() {
-    const input = document.getElementById('message-input');
-    const text = input.innerText.trim();
-    if (!text || !currentChat) return;
-    
-    try {
-        await db.collection('chats').doc(currentChat).collection('messages').add({
-            text, authorId: user.id, author: user.name,
-            timestamp: firebase.firestore.Timestamp.now()
-        });
-        
-        await db.collection('chats').doc(currentChat).update({
-            lastMessage: text.substring(0, 30),
-            lastTimestamp: firebase.firestore.Timestamp.now()
-        });
-        
-        input.innerText = '';
-        loadMessages();
-    } catch (e) {
-        showError('Message failed');
-    }
-}
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        },
 
-// ========================================
-// PROFILE & NOTES
-// ========================================
-function updateProfile() {
-    document.getElementById('profile-avatar').textContent = user.name[0];
-    document.getElementById('profile-name').textContent = user.name;
-    document.getElementById('profile-bio').textContent = user.bio || '';
-    document.getElementById('karma-count').textContent = user.karma || 0;
-    loadNotes();
-}
+        showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.style.background = type === 'error' ? 'var(--danger)' : 'var(--success)';
+            toast.textContent = message;
 
-function loadNotes() {
-    db.collection('users').doc(user.id).collection('notes')
-        .orderBy('created', 'desc')
-        .limit(10)
-        .get()
-        .then(snap => {
-            const list = document.getElementById('notes-list');
-            list.innerHTML = '';
-            snap.forEach(doc => {
-                const note = document.createElement('div');
-                note.className = 'note-card';
-                note.textContent = doc.data().text.substring(0, 100);
-                list.appendChild(note);
-            });
-        });
-}
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+    };
 
-function showNoteModal() {
-    document.getElementById('note-modal').classList.remove('hidden');
-}
-
-async function saveNote() {
-    const text = document.getElementById('note-text').value.trim();
-    if (!text) return;
-    
-    try {
-        await db.collection('users').doc(user.id).collection('notes').add({
-            text, created: firebase.firestore.Timestamp.now()
-        });
-        document.getElementById('note-text').value = '';
-        closeModal('note-modal');
-        loadNotes();
-    } catch (e) {
-        showError('Note failed');
-    }
-}
-
-// ========================================
-// UTILS
-// ========================================
-document.getElementById('message-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
-
-document.getElementById('post-content').addEventListener('input', function() {
-    document.getElementById('char-count').textContent = `${this.value.length}/2000`;
-});
-
-// Lightweight starfield
-const canvas = document.getElementById('galaxy-canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const stars = [];
-for (let i = 0; i < 80; i++) {
-    stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 1.5,
-        speed: Math.random() * 0.5
+    // Initialize app when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        nexus.init();
     });
-}
-
-function animateStars() {
-    ctx.fillStyle = 'rgba(5,5,8,0.9)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = 'white';
-    stars.forEach(star => {
-        star.x += star.speed;
-        if (star.x > canvas.width) star.x = 0;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    requestAnimationFrame(animateStars);
-}
-animateStars();
-
-// START APP
-initApp();
-console.log('🚀 Nexus v2.2 - Lightning Fast Loaded!');
 </script>
+
 </body>
 </html>
+
+
 
 
 
