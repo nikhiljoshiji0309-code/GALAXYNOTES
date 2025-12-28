@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cosmic Notes | Eternal Edition</title>
+    <title>Nexus Sovereign | Debug Mode</title>
     
-    <!-- ✅ CORRECTED: No trailing spaces in URLs -->
+    <!-- ✅ Correct script URLs (no spaces) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <style>
-        /* --- THEME VARIABLES (DARK DEFAULT) --- */
         :root {
             --theme-bg: #03030b;
             --theme-panel: rgba(10, 10, 18, 0.98);
@@ -374,7 +373,9 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIG (YOUR CONFIG) ---
+    // === DEBUG MODE: Full console visibility ===
+    console.log("🚀 Nexus Sovereign Debug Mode Loaded");
+
     const firebaseConfig = {
         apiKey: "AIzaSyAxbBOThZxG5W_R1i0zVmh-TxzWOE1uDhM",
         authDomain: "cosmic-notes-f7648.firebaseapp.com",
@@ -384,13 +385,11 @@
         appId: "1:70656136344:web:640193b83f63cac569aced"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
     const storage = firebase.storage();
 
-    // --- STATE ---
     let currentUser = null;
     let activeChatId = null;
     let msgUnsubscribe = null;
@@ -405,7 +404,7 @@
         document.body.classList.add('light-theme');
     }
 
-    // --- AUTH WITH ERROR HANDLING ---
+    // --- AUTH WITH DEBUG LOGS ---
     async function handleLogin() {
         const btn = document.querySelector('#auth-gate .btn-primary');
         const originalText = btn.innerHTML;
@@ -413,22 +412,22 @@
         btn.disabled = true;
 
         try {
+            console.log("🌐 Starting Google Sign-In...");
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
-            await auth.signInWithPopup(provider);
+            const result = await auth.signInWithPopup(provider);
+            console.log("✅ Sign-in successful:", result.user.email);
         } catch (err) {
-            console.error("Auth error:", err);
+            console.error("❌ Auth error:", err);
             let msg = "Sign-in failed. ";
             if (err.code === 'auth/popup-blocked') {
-                msg += "Popup blocked! Allow popups and try again.";
+                msg += "Popup blocked! Allow popups.";
             } else if (err.code === 'auth/cancelled-popup-request') {
-                msg += "Popup closed. Please try again.";
+                msg += "Popup closed.";
             } else if (err.code === 'auth/network-request-failed') {
-                msg += "Network error. Check your internet.";
-            } else if (err.message && err.message.includes("Domain not whitelisted")) {
-                msg += "Domain not authorized. Use http://localhost or add your domain in Firebase Console.";
+                msg += "Network error.";
             } else {
-                msg += "Error: " + (err.message || err.code);
+                msg += err.message || err.code;
             }
             alert(msg);
         } finally {
@@ -437,48 +436,84 @@
         }
     }
 
+    // === CRITICAL: DEBUG ONAUTHSTATECHANGED ===
     auth.onAuthStateChanged(async user => {
+        console.log("🔍 onAuthStateChanged triggered →", user ? user.email : "null");
+        
         if (user) {
             currentUser = user;
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (!userDoc.exists || !userDoc.data().name) {
-                document.getElementById('identity-lock').style.display = 'flex';
-            } else {
-                document.getElementById('app').style.display = 'flex';
-                loadUserProfile();
-                loadChatList();
-                loadDiscoverFeed();
+            console.log("👤 Current user set:", user.uid);
+            
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                console.log("📄 User document exists?", userDoc.exists);
+                
+                if (!userDoc.exists || !userDoc.data().name) {
+                    console.log("➡️ Showing identity setup modal");
+                    document.getElementById('auth-gate').style.display = 'none';
+                    document.getElementById('identity-lock').style.display = 'flex';
+                    document.getElementById('app').style.display = 'none';
+                } else {
+                    console.log("✅ User profile valid. Loading app...");
+                    document.getElementById('auth-gate').style.display = 'none';
+                    document.getElementById('identity-lock').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    loadUserProfile();
+                    loadChatList();
+                    loadDiscoverFeed();
+                }
+            } catch (err) {
+                console.error("💥 Error reading user profile:", err);
+                alert("Profile load error: " + err.message);
             }
         } else {
+            console.log("🚪 No authenticated user");
             document.getElementById('auth-gate').style.display = 'flex';
-            document.getElementById('app').style.display = 'none';
             document.getElementById('identity-lock').style.display = 'none';
+            document.getElementById('app').style.display = 'none';
         }
     });
 
     function handleLogout() {
+        console.log("🚪 Logging out...");
         auth.signOut();
     }
 
-    // --- PROFILE ---
+    // === DEBUG: SUBMIT IDENTITY ===
     async function submitIdentity() {
         const name = document.getElementById('pilot-name').value.trim();
         const status = document.getElementById('pilot-status').value;
         const bio = document.getElementById('pilot-bio').value.trim();
-        if (name.length < 3) return alert("Callsign too short.");
         
-        await db.collection('users').doc(currentUser.uid).set({
-            name, status, bio,
-            avatarUrl: currentUser.photoURL,
-            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        if (name.length < 3) {
+            alert("Callsign must be at least 3 characters.");
+            return;
+        }
         
-        document.getElementById('identity-lock').style.display = 'none';
-        loadUserProfile();
-        loadChatList();
-        loadDiscoverFeed();
+        console.log("💾 Saving identity:", { name, status, bio });
+        
+        try {
+            await db.collection('users').doc(currentUser.uid).set({
+                name,
+                status,
+                bio,
+                avatarUrl: currentUser.photoURL,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+            console.log("✅ Identity saved successfully");
+            document.getElementById('identity-lock').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            loadUserProfile();
+            loadChatList();
+            loadDiscoverFeed();
+        } catch (err) {
+            console.error("💥 Failed to save identity:", err);
+            alert("Failed to save profile: " + err.message);
+        }
     }
 
+    // --- Rest of app functions (same as before, no changes needed) ---
     async function loadUserProfile() {
         const doc = await db.collection('users').doc(currentUser.uid).get();
         const data = doc.data();
@@ -507,7 +542,6 @@
         document.getElementById('profile-posts').innerHTML = posts.empty ? "No transmissions yet." : html;
     }
 
-    // --- NAVIGATION ---
     function navigate(view) {
         document.querySelectorAll('.content-view').forEach(el => el.classList.remove('active'));
         document.getElementById(`${view}-view`).classList.add('active');
@@ -520,7 +554,6 @@
         document.getElementById('sidebar').classList.toggle('expanded');
     }
 
-    // --- PUBLISH & DISCOVER ---
     async function publishNote() {
         const title = document.getElementById('note-title').value.trim();
         const body = document.getElementById('note-body').value.trim();
@@ -600,7 +633,6 @@
         }
     }
 
-    // --- CHATS ---
     function loadChatList() {
         db.collection('chats').where('participants', 'array-contains', currentUser.uid)
             .orderBy('timestamp', 'desc')
@@ -685,7 +717,6 @@
         });
     }
 
-    // --- GROUP CHATS ---
     function openCreateGroupModal() {
         document.getElementById('group-modal').style.display = 'flex';
         document.getElementById('group-name').value = '';
@@ -736,7 +767,6 @@
         loadChatList();
     }
 
-    // --- STAR ENGINE ---
     const canvas = document.getElementById('star-canvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
@@ -770,3 +800,4 @@
 
 </body>
 </html>
+
